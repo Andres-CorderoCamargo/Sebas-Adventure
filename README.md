@@ -1,2 +1,2 @@
 # Sebas-Adventure
-A personal game in Godot.
+A personal game in Godot [no game available (at least not yet !)].
