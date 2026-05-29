@@ -11,7 +11,15 @@
 [ext_resource type="Texture2D" uid="uid://yc50enc0ym06" path="res://Assets/sprites/jump/Illustration_sans_titre.png" id="8_1o1em"]
 [ext_resource type="Texture2D" uid="uid://ce0walm1os4jc" path="res://Assets/sprites/run/Run-2.png" id="8_uappy"]
 [ext_resource type="Texture2D" uid="uid://dhdy87djtp1gk" path="res://Assets/sprites/run/Run-3.png" id="9_ar31r"]
+[ext_resource type="Texture2D" uid="uid://bdunlvqd5ntkq" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-1.png" id="9_ova5n"]
 [ext_resource type="Texture2D" uid="uid://cpkj38iu1d1jr" path="res://Assets/sprites/run/Run-4.png" id="10_ai7lo"]
+[ext_resource type="Texture2D" uid="uid://cvy2b26gmu3ls" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-2.png" id="10_iwqjs"]
+[ext_resource type="Texture2D" uid="uid://dxt25cw7himth" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-3.png" id="11_67rff"]
+[ext_resource type="Texture2D" uid="uid://bgrirg31ft2l2" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-4.png" id="12_bin57"]
+[ext_resource type="Texture2D" uid="uid://cdecrbrwsqhj3" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-5.png" id="13_4xo4j"]
+[ext_resource type="Texture2D" uid="uid://ehgb427cgrcl" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-6.png" id="14_fuk2q"]
+[ext_resource type="Texture2D" uid="uid://dufuam1dahn22" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-7.png" id="15_usg7f"]
+[ext_resource type="Texture2D" uid="uid://c2bk8ptafniso" path="res://Assets/sprites/jumpspin/Illustration_sans_titre-8.png" id="16_28b5d"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ova5n"]
 animations = [{
@@ -45,6 +53,35 @@ animations = [{
 "loop": true,
 "name": &"jump",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_ova5n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_iwqjs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_67rff")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_bin57")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_4xo4j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_fuk2q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_usg7f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_28b5d")
+}],
+"loop": true,
+"name": &"jumpspin",
+"speed": 16.0
 }, {
 "frames": [{
 "duration": 1.0,
