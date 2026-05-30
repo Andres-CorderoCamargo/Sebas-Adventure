@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://knmfhray7mjo"]
 
 [ext_resource type="Texture2D" uid="uid://c6gap5713h5ac" path="res://Assets/sprites/Idle/Illustration_sans_titre-1.png" id="1_8n7sg"]
-[ext_resource type="Script" uid="uid://dl62tywvn0hx" path="res://scripts/player.gd" id="1_k7yj1"]
+[ext_resource type="Script" uid="uid://cgk1y4i5c57oy" path="res://scenes/player_2.0.gd" id="1_ova5n"]
 [ext_resource type="Texture2D" uid="uid://bpsibekmnalh" path="res://Assets/sprites/Idle/Illustration_sans_titre-2.png" id="2_k7yj1"]
 [ext_resource type="Texture2D" uid="uid://bxcok3h67n8ly" path="res://Assets/sprites/Idle/Illustration_sans_titre-3.png" id="3_1o1em"]
 [ext_resource type="Texture2D" uid="uid://di2xfoung6k3l" path="res://Assets/sprites/Idle/Illustration_sans_titre-4.png" id="4_eb6bb"]
@@ -101,18 +101,19 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_8n7sg"]
-size = Vector2(15, 31)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ova5n"]
+radius = 7.0
 
 [node name="CharacterBody2D" type="CharacterBody2D" unique_id=509887145]
-script = ExtResource("1_k7yj1")
+script = ExtResource("1_ova5n")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2094976186]
 position = Vector2(3, -16)
 sprite_frames = SubResource("SpriteFrames_ova5n")
-animation = &"idle"
+animation = &"walk"
 autoplay = "idle"
+frame_progress = 0.93438053
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=867316139]
-position = Vector2(3.5, -15.5)
-shape = SubResource("RectangleShape2D_8n7sg")
+position = Vector2(6, -16)
+shape = SubResource("CapsuleShape2D_ova5n")
