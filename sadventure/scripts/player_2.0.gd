@@ -2,75 +2,189 @@ extends CharacterBody2D
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
-# Velocidades
-var maxSpeed = 360
-var maxSpeedFloat = 1.0
-var accel = 180
-var accelFloat = 1.2
-var decel = 280
-var decelFloat = 2.0
-var fastDecel = 680
-var fastDecelFloat = 1.0
+# =========================
+# CONSTANTES
+# =========================
 
-# Velocidad y salto
-var jump_velocity = -300.0
+const MAX_SPEED = 360.0
+const ACCEL = 216.0
+const DECEL = 560.0
+const JUMP_VELOCITY = -300.0
+
+const MAX_ROLL_SPEED = 800.0
+const MIN_ROLL_SPEED = 50.0
+const ROLL_FRICTION = 0.99
+const MAX_CHARGE_TIME = 3.0
+const MAX_ROLL_DISTANCE = 600.0
+
+# =========================
+# ESTADOS
+# =========================
+
+enum State {
+	NORMAL,
+	CHARGING,
+	ROLLING,
+}
+
+# =========================
+# VARIABLES
+# =========================
+
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
-# Estados
-var idleAnim = true
-var movePhysics = true
-var walkAnim = true
-var runAnim = true
-var jumpPhysics = true
-var jumpAnim = true
+var current_state : State = State.NORMAL
+
+var dir = 0.0
+var facing_direction = 1.0
+
+var charge_time = 0.0
+var roll_speed = 0.0
+var roll_distance = 0.0
+
+# =========================
+# BUCLE PRINCIPAL (physics_process)
+# =========================
 
 func _physics_process(delta):
-	_gravity(delta)
- 
-	# Variable que recupera el movimiento
-	var dir = Input.get_axis("ui_left", "ui_right")
+	dir = Input.get_axis("ui_left", "ui_right")
 
-	# Dejo aqui esto porque.. quiero y puedo uwu.
-	if velocity.x > 0:
-		animated_sprite.flip_h = false
-	elif velocity.x < 0:
-		animated_sprite.flip_h = true
+	apply_gravity(delta) # Aplicamos gravedad en todo momento.
 
-	# Saltooos :));
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor() and jumpPhysics:
-		velocity.y = jump_velocity
+	match current_state:
+		State.NORMAL:
+			handle_normal(delta)
 
+		State.CHARGING:
+			handle_charging(delta)
 
-	# Movimiento vivo (para que haya aceleracion y desacceleracion) 
-	if movePhysics:
-		if dir != 0:
-			var target_velocity = maxSpeed * maxSpeedFloat * dir
-			velocity.x = move_toward(velocity.x, target_velocity, accel * accelFloat * delta)
-		else:
-			velocity.x = move_toward(velocity.x, 0, decel * decelFloat * delta)
+		State.ROLLING:
+			handle_rolling(delta)
 
 	move_and_slide()
-	update_animation(velocity.x)
+	update_animation()
 
-# Gravedad (para modificarla después si besoin...
-func _gravity(delta: float) -> void:
+# =========================
+# ESTADO NORMAL
+# =========================
+
+func handle_normal(delta):
+	update_facing_direction()
+
+	if Input.is_action_pressed("ui_down"):
+		velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+
+		if Input.is_action_just_pressed("charge") and is_on_floor():
+			enter_charge()
+		return
+
+	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+
+	if dir != 0:
+		var target_speed = dir * MAX_SPEED
+		velocity.x = move_toward(velocity.x, target_speed, ACCEL * delta)
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+
+	if Input.is_action_just_pressed("charge") and is_on_floor():
+		enter_charge()
+
+# =========================
+# ESTADO CHARGING
+# =========================
+
+func handle_charging(delta):
+	velocity.x = 0.0
+	charge_time = min(charge_time + delta, MAX_CHARGE_TIME)
+
+	if not is_on_floor():
+		exit_charge()
+		return
+
+	if Input.is_action_just_released("charge"):
+		enter_roll()
+
+# =========================
+# ESTADO ROLLING
+# =========================
+
+func handle_rolling(delta):
+	roll_speed *= ROLL_FRICTION
+	velocity.x = roll_speed
+
+	roll_distance += abs(velocity.x) * delta
+
+	if (roll_distance >= MAX_ROLL_DISTANCE or abs(velocity.x) < MIN_ROLL_SPEED):
+		exit_roll()
+
+# =========================
+# TRANSICIONES
+# =========================
+
+func enter_charge():
+	current_state = State.CHARGING
+	charge_time = 0.0
+
+func exit_charge():
+	current_state = State.NORMAL
+	charge_time = 0.0
+
+func enter_roll():
+	current_state = State.ROLLING
+
+	var charge_percent = charge_time / MAX_CHARGE_TIME
+
+	roll_speed = lerp(MIN_ROLL_SPEED, MAX_ROLL_SPEED, charge_percent ) * facing_direction
+
+	roll_distance = 0.0
+	velocity.x = roll_speed
+
+func exit_roll():
+	current_state = State.NORMAL
+	roll_speed = 0.0
+	roll_distance = 0.0
+
+# =========================
+# UTILIDADES
+# =========================
+
+func apply_gravity(delta):
 	if not is_on_floor():
 		velocity.y += gravity * delta
 
-# Animaciones por separado : Si no, no se reproduciran !!
-func update_animation(directionX: float) -> void:
+func update_facing_direction():
+	if dir > 0:
+		facing_direction = 1.0
+	elif dir < 0:
+		facing_direction = -1.0
+
+	animated_sprite.flip_h = facing_direction < 0
+
+func update_animation():
+	if current_state == State.CHARGING:
+		set_anim("crouch")
+		return
+
+	if current_state == State.ROLLING:
+		set_anim("spin")
+		return
+
 	if not is_on_floor():
-		set_anim("jumpspin")
+		set_anim("spin")
 
-	elif velocity.x != 0 and velocity.x < 300:
+	elif Input.is_action_pressed("ui_down"):
+		set_anim("crouch")
+
+	elif abs(velocity.x) > 300:
+		set_anim("run")
+
+	elif abs(velocity.x) > 0:
 		set_anim("walk")
-
-	elif velocity.x > 300 :
-		set_anim("")
 
 	else:
 		set_anim("idle")
 
-func set_anim(anim: String) -> void:
+func set_anim(anim: String):
 	if animated_sprite.animation != anim:
 		animated_sprite.play(anim)
