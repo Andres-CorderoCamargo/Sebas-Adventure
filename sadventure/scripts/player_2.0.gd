@@ -1,6 +1,8 @@
 extends CharacterBody2D
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var timer: Timer = $Timer
+@onready var nom_joueur: Label = $Camera2D/CanvasLayer/nomJoueur
 
 # =========================
 # CONSTANTES
@@ -61,6 +63,7 @@ func _physics_process(delta):
 		State.ROLLING:
 			handle_rolling(delta)
 
+	controlar_timer_inactividad()
 	move_and_slide()
 	update_animation()
 
@@ -188,3 +191,14 @@ func update_animation():
 func set_anim(anim: String):
 	if animated_sprite.animation != anim:
 		animated_sprite.play(anim)
+
+func controlar_timer_inactividad():
+	if dir == 0 and current_state == State.NORMAL:
+		if timer.is_stopped():
+			timer.start(10)
+	else:
+		if not timer.is_stopped():
+			timer.stop()
+
+func _on_timer_timeout():
+	get_tree().quit()
