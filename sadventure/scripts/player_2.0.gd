@@ -192,10 +192,23 @@ func set_anim(anim: String):
 	if animated_sprite.animation != anim:
 		animated_sprite.play(anim)
 
+func _ready() -> void:
+	actualizar_label_nombre(DonneesJoueur.nom_joueur)
+
+	DonneesJoueur.nom_change.connect(actualizar_label_nombre)
+
+	if not timer.timeout.is_connected(_on_timer_timeout):
+		timer.timeout.connect(_on_timer_timeout)
+
+func actualizar_label_nombre(nuevo_nombre: String):
+	if nom_joueur:
+		nom_joueur.text = nuevo_nombre
+
 func controlar_timer_inactividad():
-	if dir == 0 and current_state == State.NORMAL:
+	if dir == 0 and velocity.x == 0 and is_on_floor() and current_state == State.NORMAL:
 		if timer.is_stopped():
-			timer.start(10)
+			timer.start(10.0)
+
 	else:
 		if not timer.is_stopped():
 			timer.stop()

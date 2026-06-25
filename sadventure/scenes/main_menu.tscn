@@ -4,25 +4,56 @@
 [ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="2_ekxnf"]
 [ext_resource type="Texture2D" uid="uid://ncpnm40odjqn" path="res://Assets/ressources/ng.png" id="2_wu84c"]
 [ext_resource type="Texture2D" uid="uid://o3e25faowrry" path="res://Assets/ressources/A.png" id="3_8ln24"]
+[ext_resource type="Texture2D" uid="uid://ba6u3j3xbt2ab" path="res://Assets/ressources/logo.jpg" id="3_rtw2f"]
+[ext_resource type="StyleBox" uid="uid://bvymekecfvu8s" path="res://effetsButton/hover.tres" id="6_rtw2f"]
+[ext_resource type="StyleBox" uid="uid://cqa47ykgyx54d" path="res://effetsButton/StartContinue.tres" id="6_tbmy8"]
+[ext_resource type="StyleBox" uid="uid://cvjgelfx644un" path="res://effetsButton/hoverStartContinue.tres" id="7_jk1qb"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ekxnf"]
 texture = ExtResource("2_wu84c")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_oa1go"]
+texture = ExtResource("3_rtw2f")
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_rtw2f"]
 texture = ExtResource("3_8ln24")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vue75"]
 bg_color = Color(1, 0.8509804, 0, 1)
-border_width_left = 5
-border_width_top = 5
 border_width_right = 5
-border_width_bottom = 5
+border_width_bottom = 3
 border_color = Color(0, 0, 0, 1)
 corner_radius_top_left = 100
 corner_radius_bottom_right = 100
 corner_detail = 1
 shadow_size = 2
 shadow_offset = Vector2(-1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tbmy8"]
+bg_color = Color(1, 0.8509804, 0, 1)
+corner_radius_top_left = 100
+corner_radius_bottom_right = 100
+corner_detail = 1
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+shadow_color = Color(0, 0.6039216, 1, 1)
+shadow_size = 5
+shadow_offset = Vector2(3, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oa1go"]
+bg_color = Color(1, 0.8509804, 0, 1)
+corner_radius_top_left = 100
+corner_radius_bottom_right = 100
+corner_detail = 1
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+shadow_color = Color(0.6783787, 0, 0.029859548, 1)
+shadow_size = 5
+shadow_offset = Vector2(3, 3)
 
 [node name="MainMenu" type="Control" unique_id=74612737]
 layout_mode = 3
@@ -42,15 +73,32 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_ekxnf")
 
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=737799224]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -147.0
+offset_top = 19.0
+offset_right = -19.0
+offset_bottom = 80.0
+grow_horizontal = 0
+
+[node name="Panel" type="Panel" parent="HBoxContainer" unique_id=671734130]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+localize_numeral_system = false
+theme_override_styles/panel = SubResource("StyleBoxTexture_oa1go")
+
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2086865746]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 25.0
-offset_top = -298.0
-offset_right = 429.0
-offset_bottom = 291.0
+offset_left = 44.0
+offset_top = -280.0
+offset_right = 494.0
+offset_bottom = 279.0
 grow_vertical = 2
 theme_override_constants/separation = 10
 
@@ -67,7 +115,7 @@ alignment = 1
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 20
-text = "Your name : "
+text = "Name : "
 
 [node name="LineEdit" type="LineEdit" parent="VBoxContainer/HBoxContainer" unique_id=513654755]
 clip_contents = true
@@ -81,46 +129,55 @@ max_length = 8
 [node name="start" type="Button" parent="VBoxContainer" unique_id=2067600439]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.32456303, 0.36860198, 0.19089055, 1)
+theme_override_colors/font_hover_color = Color(0.09803922, 0.74509805, 0, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
-theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("6_tbmy8")
+theme_override_styles/hover = ExtResource("7_jk1qb")
 text = "Start game
 "
 
 [node name="shop" type="Button" parent="VBoxContainer" unique_id=1169741666]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0.30980393, 1, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/hover = ExtResource("6_rtw2f")
+disabled = true
 text = "Shop
 
 "
 
 [node name="skin" type="Button" parent="VBoxContainer" unique_id=1266995162]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0.30980393, 1, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/hover = ExtResource("6_rtw2f")
+disabled = true
 text = "Skin
 "
 
 [node name="optons" type="Button" parent="VBoxContainer" unique_id=1875554116]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1615676, 0.6245952, 0.8345723, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/hover = SubResource("StyleBoxFlat_tbmy8")
 text = "Options
 "
 
 [node name="exit" type="Button" parent="VBoxContainer" unique_id=2038483346]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1615676, 0.6245952, 0.8345723, 1)
+theme_override_colors/font_color = Color(0.62908286, 0, 0.029746639, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/hover = SubResource("StyleBoxFlat_oa1go")
 text = "Exit game"
 
 [connection signal="text_submitted" from="VBoxContainer/HBoxContainer/LineEdit" to="." method="_on_line_edit_text_submitted"]

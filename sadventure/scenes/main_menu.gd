@@ -1,10 +1,11 @@
 extends Control
 
-var banned_words = ["fuck", "dick", ""]
+var banned_words = ["fuck", "dick"]
 
-# Called when the node enters the scene tree for the first time.
+@onready var line_edit: LineEdit = $VBoxContainer/HBoxContainer/LineEdit
+
 func _ready() -> void:
-	pass # Replace with function body.
+	pass
 
 func _on_start_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
@@ -22,13 +23,14 @@ func _on_exit_pressed() -> void:
 	get_tree().quit()
 
 func _on_line_edit_text_submitted(text: String) -> void:
-	if is_name_valid(text) :
-		var final_name = sanitize_name(text)
-		if final_name == "":
-			final_name = "Player"
-		DonneesJoueur.player_name = final_name
-	else : 
-		DonneesJoueur.nom_joueur = "Player"
+	var final_name = sanitize_name(text)
+
+	if final_name == "" or not is_name_valid(final_name):
+		final_name = "Player"
+
+	DonneesJoueur.set_nom(final_name)
+
+	line_edit.text = final_name
 
 func is_name_valid(name: String) -> bool:
 	var lower = name.to_lower()
@@ -39,10 +41,11 @@ func is_name_valid(name: String) -> bool:
 
 func sanitize_name(name: String) -> String:
 	name = name.strip_edges()
-	# limitar tamaño
-	name = name.substr(0, 10)
-	# quitar caracteres raros
+
 	var regex = RegEx.new()
 	regex.compile("[^a-zA-Z0-9_ ]")
 	name = regex.sub(name, "", true)
-	return name
+
+	name = name.substr(0, 10)
+
+	return name.strip_edges()
