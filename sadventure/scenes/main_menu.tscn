@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cqapfwcjc5lxw"]
 
-[ext_resource type="Script" uid="uid://be1l17feky00i" path="res://scenes/main_menu.gd" id="1_l6cm7"]
+[ext_resource type="Script" uid="uid://be1l17feky00i" path="res://scripts/main_menu.gd" id="1_l6cm7"]
 [ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="2_ekxnf"]
 [ext_resource type="Texture2D" uid="uid://ncpnm40odjqn" path="res://Assets/ressources/ng.png" id="2_wu84c"]
 [ext_resource type="Texture2D" uid="uid://o3e25faowrry" path="res://Assets/ressources/A.png" id="3_8ln24"]
@@ -18,8 +18,30 @@ texture = ExtResource("3_rtw2f")
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_rtw2f"]
 texture = ExtResource("3_8ln24")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jk1qb"]
+bg_color = Color(0.99607843, 0.8509804, 0, 1)
+border_width_right = 5
+border_width_bottom = 3
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 100
+corner_radius_bottom_right = 100
+corner_detail = 1
+shadow_size = 2
+shadow_offset = Vector2(-1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5dd4i"]
+bg_color = Color(0.99607843, 0.8509804, 0, 1)
+border_width_right = 5
+border_width_bottom = 3
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 100
+corner_radius_bottom_right = 100
+corner_detail = 1
+shadow_size = 2
+shadow_offset = Vector2(-1, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vue75"]
-bg_color = Color(1, 0.8509804, 0, 1)
+bg_color = Color(0.9962469, 0.8498941, 2.695322e-06, 1)
 border_width_right = 5
 border_width_bottom = 3
 border_color = Color(0, 0, 0, 1)
@@ -41,6 +63,17 @@ expand_margin_bottom = 2.0
 shadow_color = Color(0, 0.6039216, 1, 1)
 shadow_size = 5
 shadow_offset = Vector2(3, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lgwnu"]
+bg_color = Color(0.99607843, 0.8509804, 0, 1)
+border_width_right = 5
+border_width_bottom = 3
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 100
+corner_radius_bottom_right = 100
+corner_detail = 1
+shadow_size = 2
+shadow_offset = Vector2(-1, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oa1go"]
 bg_color = Color(1, 0.8509804, 0, 1)
@@ -143,7 +176,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.30980393, 1, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/normal = SubResource("StyleBoxFlat_jk1qb")
 theme_override_styles/hover = ExtResource("6_rtw2f")
 disabled = true
 text = "Shop
@@ -155,7 +188,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.30980393, 1, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/normal = SubResource("StyleBoxFlat_5dd4i")
 theme_override_styles/hover = ExtResource("6_rtw2f")
 disabled = true
 text = "Skin
@@ -164,6 +197,7 @@ text = "Skin
 [node name="optons" type="Button" parent="VBoxContainer" unique_id=1875554116]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0.6039216, 1, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
@@ -176,7 +210,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.62908286, 0, 0.029746639, 1)
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_vue75")
+theme_override_styles/normal = SubResource("StyleBoxFlat_lgwnu")
 theme_override_styles/hover = SubResource("StyleBoxFlat_oa1go")
 text = "Exit game"
 

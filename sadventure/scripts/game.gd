@@ -6,9 +6,8 @@ func _ready() -> void:
 	if menu_pausa:
 		menu_pausa.visible = false
 
-
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("ui_cancel"):
+	if Input.is_action_just_pressed("esc"):
 		_alternar_pausa()
 
 func _alternar_pausa():
