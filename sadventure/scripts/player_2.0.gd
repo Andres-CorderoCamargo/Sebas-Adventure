@@ -16,10 +16,10 @@ var num_vidas = 3 # Por defecto son tres xd
 # Habilidades 
 # =========================
 
-var has_doubleJump = true
+var has_doubleJump = false
 var can_double_jump = false
 
-var has_spindash = true 
+var has_spindash = false 
 
 var has_climb = false
 
@@ -44,9 +44,9 @@ const MAX_ROLL_DISTANCE = 600.0
 
 enum State {
 	NORMAL,
+	BRAKING,
 	CHARGING,
 	ROLLING,
-	SKIDDING,
 	CLIMBING
 }
 
@@ -78,14 +78,14 @@ func _physics_process(delta):
 		State.NORMAL:
 			handle_normal(delta)
 
+		State.BRAKING:
+			handle_braking(delta)
+
 		State.CHARGING:
 			handle_charging(delta)
 
 		State.ROLLING:
 			handle_rolling(delta)
-
-		State.SKIDDING:
-			handle_skidding(delta)
 
 	controlar_timer_inactividad()
 	controlar_vidas()
@@ -127,6 +127,22 @@ func handle_normal(delta):
 	if Input.is_action_just_pressed("charge") and is_on_floor():
 		enter_charge()
 
+	if dir != 0 and sign(dir) != sign(velocity.x) and abs(velocity.x) > (MAX_SPEED * 0.6) and is_on_floor():
+		current_state = State.BRAKING
+		return
+
+# =========================
+# ESTADO BRAKING
+# =========================
+func handle_braking(delta):
+	velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+
+	if dir == 0 or abs(velocity.x) <= MIN_ROLL_SPEED:
+		current_state = State.NORMAL
+
+	elif sign(dir) == sign(velocity.x):
+		current_state = State.NORMAL
+
 # =========================
 # ESTADO CHARGING
 # =========================
@@ -156,26 +172,6 @@ func handle_rolling(delta):
 		exit_roll()
 
 # =========================
-# ESTADO SKIDDING
-# =========================
-
-func enter_skidding():
-	current_state = State.SKIDDING
-
-func handle_skidding(delta):
-	velocity.x = move_toward(velocity.x, 0.0, DECEL * 1.5 * delta)
- 
-	if velocity.x == 0 or dir == 0:
-		exit_skidding()
-		return
-		
-	if (dir > 0 and velocity.x >= 0) or (dir < 0 and velocity.x <= 0):
-		exit_skidding()
-
-func exit_skidding():
-	current_state = State.NORMAL
-	
-# =========================
 # TRANSICIONES
 # =========================
 
@@ -188,8 +184,11 @@ func exit_charge():
 	charge_time = 0.0
 
 func enter_roll():
+	if not has_spindash :
+		exit_charge()
+		return
+		
 	current_state = State.ROLLING
-
 	var charge_percent = charge_time / MAX_CHARGE_TIME
 
 	roll_speed = lerp(MIN_ROLL_SPEED, MAX_ROLL_SPEED, charge_percent ) * facing_direction
@@ -223,10 +222,10 @@ func update_facing_direction():
 	animated_sprite.flip_h = facing_direction < 0
 
 func update_animation():
-	if current_state == State.SKIDDING:
-		#set_anim("skid")
+	if current_state == State.BRAKING:
+		#set_anim("skid")  <- O el nombre que tenga tu animación de frenado/derrape
 		return
-	
+
 	if current_state == State.CHARGING:
 		set_anim("crouch")
 		return
