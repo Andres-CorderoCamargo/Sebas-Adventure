@@ -1,8 +1,27 @@
 extends CharacterBody2D
 
+class_name Player
+
+# =========================
+# Datos importantes 
+# =========================
+
+var num_vidas = 3 # Por defecto son tres xd
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var timer: Timer = $Timer
-@onready var nom_joueur: Label = $Camera2D/CanvasLayer/nomJoueur
+@onready var nom_joueur: Label = $Camera2D/nomJoueur
+
+# =========================
+# Habilidades 
+# =========================
+
+var has_doubleJump = true
+var can_double_jump = false
+
+var has_spindash = true 
+
+var has_climb = false
 
 # =========================
 # CONSTANTES
@@ -27,6 +46,8 @@ enum State {
 	NORMAL,
 	CHARGING,
 	ROLLING,
+	SKIDDING,
+	CLIMBING
 }
 
 # =========================
@@ -63,7 +84,11 @@ func _physics_process(delta):
 		State.ROLLING:
 			handle_rolling(delta)
 
+		State.SKIDDING:
+			handle_skidding(delta)
+
 	controlar_timer_inactividad()
+	controlar_vidas()
 	move_and_slide()
 	update_animation()
 
@@ -81,8 +106,17 @@ func handle_normal(delta):
 			enter_charge()
 		return
 
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	if is_on_floor():
+		if has_doubleJump:
+			can_double_jump = true
+		if Input.is_action_just_pressed("jump"):
+			velocity.y = JUMP_VELOCITY
+
+	else:
+		if Input.is_action_just_pressed("jump") and can_double_jump:
+			velocity.y = JUMP_VELOCITY
+			can_double_jump = false
+			# Opcional: Aquí disparar una partícula o animación especial del doble salto
 
 	if dir != 0:
 		var target_speed = dir * MAX_SPEED
@@ -122,6 +156,26 @@ func handle_rolling(delta):
 		exit_roll()
 
 # =========================
+# ESTADO SKIDDING
+# =========================
+
+func enter_skidding():
+	current_state = State.SKIDDING
+
+func handle_skidding(delta):
+	velocity.x = move_toward(velocity.x, 0.0, DECEL * 1.5 * delta)
+ 
+	if velocity.x == 0 or dir == 0:
+		exit_skidding()
+		return
+		
+	if (dir > 0 and velocity.x >= 0) or (dir < 0 and velocity.x <= 0):
+		exit_skidding()
+
+func exit_skidding():
+	current_state = State.NORMAL
+	
+# =========================
 # TRANSICIONES
 # =========================
 
@@ -149,12 +203,16 @@ func exit_roll():
 	roll_distance = 0.0
 
 # =========================
-# UTILIDADES
+# Gravedad
 # =========================
 
 func apply_gravity(delta):
-	if not is_on_floor():
+	if not is_on_floor() and current_state != State.CHARGING:
 		velocity.y += gravity * delta
+
+# =========================
+# Orientacion sprite + animacion
+# =========================
 
 func update_facing_direction():
 	if dir > 0:
@@ -165,6 +223,10 @@ func update_facing_direction():
 	animated_sprite.flip_h = facing_direction < 0
 
 func update_animation():
+	if current_state == State.SKIDDING:
+		#set_anim("skid")
+		return
+	
 	if current_state == State.CHARGING:
 		set_anim("crouch")
 		return
@@ -192,6 +254,10 @@ func set_anim(anim: String):
 	if animated_sprite.animation != anim:
 		animated_sprite.play(anim)
 
+# =========================
+# inicio
+# =========================
+
 func _ready() -> void:
 	actualizar_label_nombre(DonneesJoueur.nom_joueur)
 
@@ -200,14 +266,22 @@ func _ready() -> void:
 	if not timer.timeout.is_connected(_on_timer_timeout):
 		timer.timeout.connect(_on_timer_timeout)
 
+# =========================
+# Nombre jugador
+# =========================
+
 func actualizar_label_nombre(nuevo_nombre: String):
 	if nom_joueur:
 		nom_joueur.text = nuevo_nombre
 
+# =========================
+# Inactividad
+# =========================
+
 func controlar_timer_inactividad():
 	if dir == 0 and velocity.x == 0 and is_on_floor() and current_state == State.NORMAL:
 		if timer.is_stopped():
-			timer.start(10.0)
+			timer.start(40.0) # Sonic se desespera, so do I
 
 	else:
 		if not timer.is_stopped():
@@ -215,3 +289,6 @@ func controlar_timer_inactividad():
 
 func _on_timer_timeout():
 	get_tree().quit()
+
+func controlar_vidas() :
+	pass
