@@ -1,12 +1,16 @@
 extends CharacterBody2D
 
 class_name Player
+# Al inicio del script del Player
+
+signal combate_iniciado(habilidades_jugador: Dictionary, ringsObtenidos: int)
 
 # =========================
 # Datos importantes 
 # =========================
 
 var num_vidas = 3 # Por defecto son tres xd
+var ringsObtenidos := 0
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var timer: Timer = $Timer
@@ -15,22 +19,37 @@ var num_vidas = 3 # Por defecto son tres xd
 # =========================
 # Habilidades 
 # =========================
+enum ABILITIES {
+	DOUBLEJUMP,
+	FAST,
+	SPINDASH,
+	CLIMB,
+	STOMP
+}
 
-var has_doubleJump = false
-var can_double_jump = false
+var has_doubleJump = true
+var can_double_jump := false # Tiene que estar siempre en false para que pueda hacer un salto doble.
 
-var has_spindash = false 
+var has_spindash = true 
 
 var has_climb = false
+
+var has_fast_shoe = false
+
+var has_stomp = false
+var can_stomp = false # Same como double jump 
 
 # =========================
 # CONSTANTES
 # =========================
 
-const MAX_SPEED = 360.0
-const ACCEL = 216.0
+const MAX_SPEED = 250.0
+const ACCEL = 125.0
 const DECEL = 560.0
 const JUMP_VELOCITY = -300.0
+
+const ACCEL_GROUND = 120.0
+const ACCEL_AIR = 300.0
 
 const MAX_ROLL_SPEED = 800.0
 const MIN_ROLL_SPEED = 50.0
@@ -47,7 +66,8 @@ enum State {
 	BRAKING,
 	CHARGING,
 	ROLLING,
-	CLIMBING
+	CLIMBING,
+	COMBAT #Para entrar en fase de duelo y que no sea interrumpido como accion.
 }
 
 # =========================
@@ -87,6 +107,9 @@ func _physics_process(delta):
 		State.ROLLING:
 			handle_rolling(delta)
 
+		State.COMBAT:
+			handle_combat(delta)
+
 	controlar_timer_inactividad()
 	controlar_vidas()
 	move_and_slide()
@@ -118,9 +141,15 @@ func handle_normal(delta):
 			can_double_jump = false
 			# Opcional: Aquí disparar una partícula o animación especial del doble salto
 
+	var target_speed
 	if dir != 0:
-		var target_speed = dir * MAX_SPEED
-		velocity.x = move_toward(velocity.x, target_speed, ACCEL * delta)
+		if has_fast_shoe:
+			target_speed = dir * 1.5 * MAX_SPEED #Correra mas rapido si tiene el shoe
+		else : 
+			target_speed = dir * MAX_SPEED
+
+		var current_accel = ACCEL_GROUND if is_on_floor() else ACCEL_AIR #On évite qu'il saut bizarrement
+		velocity.x = move_toward(velocity.x, target_speed, current_accel * delta)
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
 
@@ -170,6 +199,30 @@ func handle_rolling(delta):
 
 	if (roll_distance >= MAX_ROLL_DISTANCE or abs(velocity.x) < MIN_ROLL_SPEED):
 		exit_roll()
+
+# =========================
+# ESTADO COMBAT
+# =========================
+
+func handle_combat(delta):
+	velocity = Vector2.ZERO
+	#Continuara...
+
+func entrar_a_combate():
+	if current_state == State.COMBAT:
+		return
+
+	current_state = State.COMBAT
+
+	var habilidadesUsables = {
+		ABILITIES.DOUBLEJUMP: has_doubleJump,
+		ABILITIES.FAST: has_fast_shoe,
+		ABILITIES.SPINDASH: has_spindash,
+		ABILITIES.CLIMB: has_climb,
+		ABILITIES.STOMP: has_stomp
+	}
+
+	combate_iniciado.emit(habilidadesUsables, ringsObtenidos)
 
 # =========================
 # TRANSICIONES
@@ -240,8 +293,11 @@ func update_animation():
 	elif Input.is_action_pressed("ui_down"):
 		set_anim("crouch")
 
-	elif abs(velocity.x) > 300:
+	elif abs(velocity.x) > 250:
 		set_anim("run")
+		
+	elif abs(velocity.x) > 150:
+		set_anim("fastwalk")
 
 	elif abs(velocity.x) > 0:
 		set_anim("walk")
@@ -289,5 +345,18 @@ func controlar_timer_inactividad():
 func _on_timer_timeout():
 	get_tree().quit()
 
+# =========================
+# Gestion de vidas
+# =========================
+
 func controlar_vidas() :
-	pass
+	if 0 >= num_vidas :
+		pass 
+
+# =========================
+# Gestión de Fin de Nivel
+# =========================
+
+func final_nivel():
+	DonneesJoueur.rings_totales_juego += ringsObtenidos
+	ringsObtenidos = 0

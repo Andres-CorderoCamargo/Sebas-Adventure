@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ddk7qp7i6ggoo" path="res://scripts/startgame.gd" id="1_l1exa"]
 
-[node name="Menu1" type="Control" unique_id=606776873]
+[node name="menu_start" type="Control" unique_id=606776873]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

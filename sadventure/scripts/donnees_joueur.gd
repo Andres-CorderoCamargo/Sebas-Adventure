@@ -4,6 +4,7 @@ extends Node
 signal nom_change(nouveau_nom)
 
 var nom_joueur := "Sebas"
+var ringsTotales: int = 0
 
 func set_nom(nouveau_nom):
 	nom_joueur = nouveau_nom

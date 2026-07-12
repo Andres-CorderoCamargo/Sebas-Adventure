@@ -43,6 +43,10 @@
 [ext_resource type="Texture2D" uid="uid://hdctxnwqdk25" path="res://Assets/sprites/walkf/w11.png" id="35_uyu6i"]
 [ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="43_n6h11"]
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ova5n"]
+radius = 9.0
+height = 18.0
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_ova5n"]
 animations = [{
 "frames": [{
@@ -79,6 +83,44 @@ animations = [{
 "loop": true,
 "name": &"crouch",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("25_yisfu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_b80s3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_3ras0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_cv16y")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_dcxj7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_sow7m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_jpn48")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_jpii0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_n6h11")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_o65ms")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_uyu6i")
+}],
+"loop": true,
+"name": &"fastwalk",
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -193,12 +235,8 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk",
-"speed": 5.0
+"speed": 4.0
 }]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ova5n"]
-radius = 9.0
-height = 18.0
 
 [node name="player" type="CharacterBody2D" unique_id=355616067]
 collision_layer = 10
@@ -207,23 +245,21 @@ script = ExtResource("1_ova5n")
 
 [node name="Timer" type="Timer" parent="." unique_id=2006121595]
 
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=170049279]
+position = Vector2(6, -9)
+shape = SubResource("CapsuleShape2D_ova5n")
+
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=203748440]
 position = Vector2(3, -16)
 sprite_frames = SubResource("SpriteFrames_ova5n")
 animation = &"walk"
 autoplay = "idle"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=170049279]
-position = Vector2(6, -9)
-shape = SubResource("CapsuleShape2D_ova5n")
-
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1180842328]
 position = Vector2(6, -9)
 zoom = Vector2(2.6, 2.6)
-limit_left = -9999945
-limit_top = -10000012
-limit_right = 10000055
-limit_bottom = 108
+limit_bottom = 120
+limit_smoothed = true
 
 [node name="nomJoueur" type="Label" parent="Camera2D" unique_id=1382420072]
 anchors_preset = 2
