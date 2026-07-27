@@ -8,7 +8,7 @@ func _ready() -> void:
 	pass
 
 func _on_play_pressed() -> void:
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	get_tree().change_scene_to_file("res://scenes/data_menu.tscn")
 
 func _on_shop_pressed() -> void:
 	pass

@@ -9,12 +9,13 @@ signal combate_iniciado(habilidades_jugador: Dictionary, ringsObtenidos: int)
 # Datos importantes 
 # =========================
 
-var num_vidas = 3 # Por defecto son tres xd
+var num_vidas := 3 # Por defecto son tres xd
 var ringsObtenidos := 0
 
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var animated_sprite: AnimatedSprite2D = $Sprite
 @onready var timer: Timer = $Timer
-@onready var nom_joueur: Label = $Camera2D/nomJoueur
+@onready var nom_joueur: Label = $CL/nomJoueur
+@onready var label_vidas: Label = $CL/numVidas
 
 # =========================
 # Habilidades 
@@ -36,8 +37,7 @@ var has_climb = false
 
 var has_fast_shoe = false
 
-var has_stomp = false
-var can_stomp = false # Same como double jump 
+var has_stomp = true
 
 # =========================
 # CONSTANTES
@@ -57,6 +57,8 @@ const ROLL_FRICTION = 0.99
 const MAX_CHARGE_TIME = 3.0
 const MAX_ROLL_DISTANCE = 600.0
 
+const STOMP_VELOCITY = 1000.0
+
 # =========================
 # ESTADOS
 # =========================
@@ -67,6 +69,7 @@ enum State {
 	CHARGING,
 	ROLLING,
 	CLIMBING,
+	STOMPING,
 	COMBAT #Para entrar en fase de duelo y que no sea interrumpido como accion.
 }
 
@@ -107,11 +110,13 @@ func _physics_process(delta):
 		State.ROLLING:
 			handle_rolling(delta)
 
+		State.STOMPING:
+			handle_stomp(delta)
+
 		State.COMBAT:
 			handle_combat(delta)
 
 	controlar_timer_inactividad()
-	controlar_vidas()
 	move_and_slide()
 	update_animation()
 
@@ -140,6 +145,10 @@ func handle_normal(delta):
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
 			# Opcional: Aquí disparar una partícula o animación especial del doble salto
+
+		if Input.is_action_just_pressed("charge") and has_stomp:
+			enter_stomp()
+			return
 
 	var target_speed
 	if dir != 0:
@@ -201,6 +210,26 @@ func handle_rolling(delta):
 		exit_roll()
 
 # =========================
+# ESTADO STOMPING
+# =========================
+
+func enter_stomp():
+	current_state = State.STOMPING
+	velocity.x = 0.0 
+	velocity.y = STOMP_VELOCITY
+
+func handle_stomp(delta):
+	velocity.x = 0.0
+	velocity.y = STOMP_VELOCITY
+
+	if is_on_floor():
+		exit_stomp()
+
+func exit_stomp():
+	current_state = State.NORMAL
+	# Animar partículas de polvo al chocar con el suelo.
+
+# =========================
 # ESTADO COMBAT
 # =========================
 
@@ -259,7 +288,7 @@ func exit_roll():
 # =========================
 
 func apply_gravity(delta):
-	if not is_on_floor() and current_state != State.CHARGING:
+	if not is_on_floor() and current_state != State.CHARGING and current_state != State.COMBAT:
 		velocity.y += gravity * delta
 
 # =========================
@@ -278,9 +307,17 @@ func update_animation():
 	if current_state == State.BRAKING:
 		#set_anim("skid")  <- O el nombre que tenga tu animación de frenado/derrape
 		return
+	
+	if current_state == State.COMBAT: 
+		#set_anim("combat") 
+		return
 
 	if current_state == State.CHARGING:
 		set_anim("crouch")
+		return
+
+	if current_state == State.STOMPING:
+		set_anim("crouch") #Lo cambiaré en el futuro
 		return
 
 	if current_state == State.ROLLING:
@@ -316,6 +353,7 @@ func set_anim(anim: String):
 func _ready() -> void:
 	actualizar_label_nombre(DonneesJoueur.nom_joueur)
 
+	actualizar_label_vidas()
 	DonneesJoueur.nom_change.connect(actualizar_label_nombre)
 
 	if not timer.timeout.is_connected(_on_timer_timeout):
@@ -349,9 +387,23 @@ func _on_timer_timeout():
 # Gestion de vidas
 # =========================
 
-func controlar_vidas() :
-	if 0 >= num_vidas :
-		pass 
+func actualizar_label_vidas():
+	if label_vidas:
+		label_vidas.text = "x " + str(num_vidas)
+
+func ganar_vida():
+	num_vidas += 1
+	actualizar_label_vidas() 
+	controlar_vidas()  
+
+func perder_vida():
+	num_vidas -= 1
+	actualizar_label_vidas() 
+	controlar_vidas()    
+
+func controlar_vidas():
+	if 0 >= num_vidas:
+		get_tree().change_scene_to_file("res://scenes/game_over.tscn")
 
 # =========================
 # Gestión de Fin de Nivel

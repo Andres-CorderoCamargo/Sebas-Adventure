@@ -245,30 +245,27 @@ script = ExtResource("1_ova5n")
 
 [node name="Timer" type="Timer" parent="." unique_id=2006121595]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=170049279]
+[node name="Hitbox" type="CollisionShape2D" parent="." unique_id=170049279]
 position = Vector2(6, -9)
 shape = SubResource("CapsuleShape2D_ova5n")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=203748440]
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=203748440]
 position = Vector2(3, -16)
 sprite_frames = SubResource("SpriteFrames_ova5n")
 animation = &"walk"
 autoplay = "idle"
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=1180842328]
-position = Vector2(6, -9)
-zoom = Vector2(2.6, 2.6)
-limit_bottom = 120
-limit_smoothed = true
+[node name="CL" type="CanvasLayer" parent="." unique_id=264975734]
+follow_viewport_enabled = true
 
-[node name="nomJoueur" type="Label" parent="Camera2D" unique_id=1382420072]
+[node name="nomJoueur" type="Label" parent="CL" unique_id=1382420072]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = -174.0
-offset_top = 56.0
-offset_right = -112.0
-offset_bottom = 91.0
+offset_left = -150.0
+offset_top = -612.0
+offset_right = -88.0
+offset_bottom = -577.0
 grow_vertical = 0
 theme_override_colors/font_color = Color(1, 0.6666667, 0, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
@@ -281,4 +278,28 @@ text = "Sebas"
 vertical_alignment = 2
 autowrap_trim_flags = 64
 
-[node name="CanvasLayer" type="CanvasLayer" parent="Camera2D" unique_id=846699543]
+[node name="numVidas" type="Label" parent="CL" unique_id=758243329]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -596.0
+offset_right = -88.0
+offset_bottom = -561.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.6666667, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/shadow_outline_size = 0
+theme_override_fonts/font = ExtResource("43_n6h11")
+theme_override_font_sizes/font_size = 10
+text = "x 3"
+vertical_alignment = 2
+autowrap_trim_flags = 64
+
+[node name="Camara" type="Camera2D" parent="." unique_id=1180842328]
+position = Vector2(6, -9)
+zoom = Vector2(3, 3)
+limit_bottom = 120
+limit_smoothed = true

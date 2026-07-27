@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://86o702bkx3oa"]
+
+[ext_resource type="Script" uid="uid://clrnt7kpni0mh" path="res://scripts/combatManager.gd" id="1_d7jju"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_d7jju"]
+
+[node name="CombatManager" type="CanvasLayer" unique_id=2022852541]
+script = ExtResource("1_d7jju")
+
+[node name="Background" type="TextureRect" parent="." unique_id=422215852]
+material = SubResource("CanvasItemMaterial_d7jju")
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Enemy" type="AnimatedSprite2D" parent="." unique_id=1466571687]
+
+[node name="Player" type="AnimatedSprite2D" parent="." unique_id=499670262]
+
+[node name="InterfaceCombate" type="Control" parent="." unique_id=2027530292]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel" type="HBoxContainer" parent="InterfaceCombate" unique_id=124140009]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RingsInfo" type="Label" parent="InterfaceCombate/Panel" unique_id=509253424]
+layout_mode = 2
+
+[node name="Habilidades" type="VBoxContainer" parent="InterfaceCombate/Panel" unique_id=1523930413]
+layout_mode = 2
+
+[node name="DoubleJump" type="Button" parent="InterfaceCombate/Panel/Habilidades" unique_id=80402964]
+layout_mode = 2
+
+[node name="Spindash" type="Button" parent="InterfaceCombate/Panel/Habilidades" unique_id=2065274444]
+layout_mode = 2
+
+[node name="Stomp" type="Button" parent="InterfaceCombate/Panel/Habilidades" unique_id=533075389]
+layout_mode = 2
+
+[node name="FastShoe" type="Button" parent="InterfaceCombate/Panel/Habilidades" unique_id=1182384563]
+layout_mode = 2

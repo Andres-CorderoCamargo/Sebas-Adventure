@@ -1,6 +1,12 @@
-[gd_scene format=3 uid="uid://c8n4v4jitx3sw"]
+[gd_scene format=3 uid="uid://bm8gc2f1dsf7a"]
 
-[ext_resource type="Script" uid="uid://cmmlgh1rtrsxq" path="res://scripts/game_over.gd" id="1_0mn0y"]
+[ext_resource type="Script" uid="uid://ch31v2nrgkorl" path="res://scripts/game_over.gd" id="1_xeevv"]
 
-[node name="game_over" type="Node2D" unique_id=1249079764]
-script = ExtResource("1_0mn0y")
+[node name="game_over" type="Control" unique_id=1944709075]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xeevv")

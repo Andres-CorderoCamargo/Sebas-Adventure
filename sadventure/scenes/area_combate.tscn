@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bg1t3cn811is2"]
+
+[ext_resource type="Script" uid="uid://dxiq63sq70sb3" path="res://scripts/area_combate.gd" id="1_2c5vg"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pcu0e"]
+size = Vector2(20, 10)
+
+[node name="AreaCombate" type="Area2D" unique_id=1285746568]
+script = ExtResource("1_2c5vg")
+
+[node name="CombateArea" type="CollisionShape2D" parent="." unique_id=531726845]
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_pcu0e")
