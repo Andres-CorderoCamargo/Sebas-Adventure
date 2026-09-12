@@ -11,6 +11,8 @@ class_name Player
 @onready var hitbox_normal: CollisionShape2D = $HitboxNormal
 @onready var hitbox_spin: CollisionShape2D = $HitboxSpin
 
+@onready var camara: Camera2D = $Camara
+
 # =========================
 # ENUMS
 # =========================
@@ -47,7 +49,7 @@ var es_salto_spin := false
 var has_doubleJump := true
 var can_double_jump := false
 
-var has_spindash := false
+var has_spindash := true
 var has_climb := false
 var has_fast_shoe := true
 var has_stomp := true
@@ -84,7 +86,7 @@ func _physics_process(delta: float) -> void:
 		State.BRAKING:  handle_braking(delta)
 		State.CHARGING: handle_charging(delta)
 		State.ROLLING:  handle_rolling(delta)
-		State.STOMPING: handle_stomp(delta)
+		State.STOMPING: handle_stomping(delta)
 
 	controlar_timer_inactividad()
 	move_and_slide()
@@ -107,7 +109,7 @@ func handle_normal(delta: float) -> void:
 
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = JUMP_VELOCITY 
-			if Input.is_action_pressed("ui_down"):
+			if Input.is_action_pressed("charge"):
 				es_salto_spin = true
 			else:
 				es_salto_spin = false
@@ -175,11 +177,13 @@ func handle_rolling(delta: float) -> void:
 	if roll_distance >= MAX_ROLL_DISTANCE or abs(velocity.x) < MIN_ROLL_SPEED:
 		exit_roll()
 
-func handle_stomp(_delta: float) -> void:
+func handle_stomping(_delta: float) -> void:
 	velocity.x = 0.0
 	velocity.y = STOMP_VELOCITY
 
 	if is_on_floor():
+		if camara and camara.has_method("apply_shake"):
+			camara.apply_shake()
 		exit_stomp()
 
 # =========================
@@ -280,7 +284,7 @@ func update_animation() -> void:
 			set_anim("charging")
 			return
 		State.STOMPING:
-			set_anim("crouch")
+			set_anim("spin")
 			return
 		State.ROLLING:
 			set_anim("spin")
