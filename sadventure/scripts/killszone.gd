@@ -10,11 +10,13 @@ func _ready() -> void:
 		body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node2D) -> void:
-	if body is Player:
-		body.perder_vida()
+	return
 
-		if body.num_vidas > 0:
-			recolocar_jugador(body)
+# if body is Player:
+#		body.perder_vida()
+
+#		if body.num_vidas > 0:
+#			recolocar_jugador(body)
 
 func recolocar_jugador(player: Player) -> void:
 	player.velocity = Vector2.ZERO

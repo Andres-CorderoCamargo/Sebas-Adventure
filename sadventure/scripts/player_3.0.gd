@@ -30,9 +30,9 @@ const JUMP_VELOCITY = -300.0
 const ACCEL_GROUND = 120.0
 const ACCEL_AIR = 300.0
 
-const MAX_ROLL_SPEED = 800.0
-const MIN_ROLL_SPEED = 50.0
-const ROLL_FRICTION = 0.99
+const MAX_ROLL_SPEED = 600.0
+const MIN_ROLL_SPEED = 80.0
+const ROLL_FRICTION = 0.995
 const MAX_CHARGE_TIME = 3.0
 const MAX_ROLL_DISTANCE = 600.0
 
@@ -47,7 +47,7 @@ var es_salto_spin := false
 var has_doubleJump := true
 var can_double_jump := false
 
-var has_spindash := true 
+var has_spindash := false
 var has_climb := false
 var has_fast_shoe := true
 var has_stomp := true
@@ -112,11 +112,17 @@ func handle_normal(delta: float) -> void:
 			else:
 				es_salto_spin = false
 	
-		elif Input.is_action_pressed("ui_down") and abs(velocity.x) < 10.0:
-			velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
-			if Input.is_action_just_pressed("charge"):
-				enter_charge()
-			return
+		elif Input.is_action_pressed("ui_down"):
+			if abs(velocity.x) > MIN_ROLL_SPEED:
+				current_state = State.ROLLING
+				roll_speed = velocity.x
+				roll_distance = 0.0
+				return
+			else:
+				velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+				if Input.is_action_just_pressed("charge") and has_spindash:
+					enter_charge()
+					return
 
 	else:
 		if Input.is_action_just_pressed("jump") and can_double_jump:
@@ -151,15 +157,18 @@ func handle_charging(delta: float) -> void:
 	velocity.x = 0.0
 	charge_time = min(charge_time + delta, MAX_CHARGE_TIME)
 
-	if not is_on_floor():
+	if not is_on_floor() and velocity.y > 100.0:
 		exit_charge()
 		return
 
-	if Input.is_action_just_released("charge"):
+	if Input.is_action_just_pressed("charge"):
+		charge_time = min(charge_time + 0.8, MAX_CHARGE_TIME)
+
+	if Input.is_action_just_released("ui_down"):
 		enter_roll()
 
 func handle_rolling(delta: float) -> void:
-	roll_speed *= ROLL_FRICTION
+	roll_speed *= pow(ROLL_FRICTION, delta * 60.0) 
 	velocity.x = roll_speed
 	roll_distance += abs(velocity.x) * delta
 
@@ -177,13 +186,16 @@ func handle_stomp(_delta: float) -> void:
 # TRANSICIONES Y ACCIONES
 # =========================
 
-func enter_charge() -> void:
+func enter_charge() -> void: #No utilisada de momento
 	current_state = State.CHARGING
+	velocity = Vector2.ZERO
+	hitbox_spinning()
 	charge_time = 0.0
+	hitbox_normale()
 
 func exit_charge() -> void:
 	current_state = State.NORMAL
-	charge_time = 0.0
+	charge_time = 0.0;
 
 func enter_roll() -> void:
 	if not has_spindash:
@@ -192,6 +204,7 @@ func enter_roll() -> void:
 
 	current_state = State.ROLLING
 	var charge_percent = charge_time / MAX_CHARGE_TIME
+	
 	roll_speed = lerp(MIN_ROLL_SPEED, MAX_ROLL_SPEED, charge_percent) * facing_direction
 	roll_distance = 0.0
 	velocity.x = roll_speed
@@ -263,7 +276,10 @@ func update_facing_direction() -> void:
 func update_animation() -> void:
 	match current_state:
 		State.BRAKING:  return
-		State.CHARGING, State.STOMPING:
+		State.CHARGING:
+			set_anim("charging")
+			return
+		State.STOMPING:
 			set_anim("crouch")
 			return
 		State.ROLLING:

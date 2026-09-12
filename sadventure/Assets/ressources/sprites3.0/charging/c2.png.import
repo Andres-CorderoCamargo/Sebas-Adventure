@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcv3awfuegj0c"
-path="res://.godot/imported/Spin_3.0-3.png-e58ba3713f6a55452770c2239772a24d.ctex"
+uid="uid://bb3mfow7fglan"
+path="res://.godot/imported/c2.png-f9f7d8d47dbf62fe89751b26597ec00f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ressources/sprites3.0/spin/Spin_3.0-3.png"
-dest_files=["res://.godot/imported/Spin_3.0-3.png-e58ba3713f6a55452770c2239772a24d.ctex"]
+source_file="res://Assets/ressources/sprites3.0/charging/c2.png"
+dest_files=["res://.godot/imported/c2.png-f9f7d8d47dbf62fe89751b26597ec00f.ctex"]
 
 [params]
 
