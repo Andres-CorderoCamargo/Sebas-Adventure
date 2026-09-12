@@ -1,7 +1,5 @@
 extends CharacterBody2D
-
-class_name Player
-# Al inicio del script del Player
+class_name Play
 
 signal combate_iniciado(habilidades_jugador: Dictionary, ringsObtenidos: int)
 
@@ -88,6 +86,8 @@ var charge_time = 0.0
 var roll_speed = 0.0
 var roll_distance = 0.0
 
+var invulnerabilidad: bool = false
+
 # =========================
 # BUCLE PRINCIPAL (physics_process)
 # =========================
@@ -96,6 +96,8 @@ func _physics_process(delta):
 	dir = Input.get_axis("ui_left", "ui_right")
 
 	apply_gravity(delta) # Aplicamos gravedad en todo momento.
+
+	invulnerabilidad = (current_state == State.ROLLING or current_state == State.STOMPING)
 
 	match current_state:
 		State.NORMAL:
@@ -126,7 +128,7 @@ func _physics_process(delta):
 
 func handle_normal(delta):
 	update_facing_direction()
-
+	
 	if Input.is_action_pressed("ui_down"):
 		velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
 
@@ -366,6 +368,13 @@ func _ready() -> void:
 func actualizar_label_nombre(nuevo_nombre: String):
 	if nom_joueur:
 		nom_joueur.text = nuevo_nombre
+		
+# =========================
+# Vulnerabilidad
+# =========================
+
+func esta_invulnerable() -> bool:
+	return current_state == State.ROLLING or current_state == State.STOMPING
 
 # =========================
 # Inactividad
