@@ -46,7 +46,7 @@
 [ext_resource type="Texture2D" uid="uid://betj23x45shsj" path="res://Assets/ressources/sprites3.0/spin/sp5.png" id="44_83xcg"]
 [ext_resource type="Texture2D" uid="uid://cf7ablavwxlb" path="res://Assets/ressources/sprites3.0/spin/sp6.png" id="45_nq10l"]
 [ext_resource type="Texture2D" uid="uid://bi3m1yp5vuxde" path="res://Assets/ressources/sprites3.0/spin/sp7.png" id="46_cx4al"]
-[ext_resource type="Script" uid="uid://2jewu73ci0td" path="res://scenes/camara.gd" id="47_dxvjp"]
+[ext_resource type="Script" uid="uid://2jewu73ci0td" path="res://scripts/camara.gd" id="47_dxvjp"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_0nbmm"]
 animations = [{
@@ -329,7 +329,7 @@ autowrap_trim_flags = 64
 sprite_frames = SubResource("SpriteFrames_0nbmm")
 animation = &"spin"
 autoplay = "idle"
-frame_progress = 0.05109636
+frame_progress = 0.33706126
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
