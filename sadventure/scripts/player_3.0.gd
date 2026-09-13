@@ -40,6 +40,8 @@ const MAX_ROLL_DISTANCE = 600.0
 
 const STOMP_VELOCITY = 1000.0
 
+const MIN_WALL_SPEED: float = 300.0
+
 # =========================
 # DATOS Y HABILIDADES
 # =========================
@@ -51,7 +53,8 @@ var can_double_jump := false
 
 var salto := 1.0
 
-var has_spindash := false
+
+var has_spindash := true
 var has_climb := false
 var has_fast_shoe := true
 var has_stomp := true
@@ -81,7 +84,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	dir = Input.get_axis("ui_left", "ui_right")
 
-	apply_gravity(delta)
+	procesar_gravedad_y_paredes(delta)
 
 	match current_state:
 		State.NORMAL:   handle_normal(delta)
@@ -95,6 +98,19 @@ func _physics_process(delta: float) -> void:
 	
 	update_animation()
 	alternar_hitbox()
+
+func procesar_gravedad_y_paredes(delta: float) -> void:
+	var velocidad_actual: float = velocity.length()
+	var tocando_superficie: bool = is_on_floor() or is_on_wall()
+
+	if tocando_superficie and velocidad_actual >= MIN_WALL_SPEED:
+		var normal: Vector2 = get_floor_normal()
+		if normal != Vector2.ZERO:
+			up_direction = normal
+			velocity -= normal * 100.0 * delta
+	else:
+		up_direction = Vector2.UP
+		velocity.y += gravity * delta
 
 # =========================
 # MANEJO DE ESTADOS
