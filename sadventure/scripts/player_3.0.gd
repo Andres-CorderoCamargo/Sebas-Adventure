@@ -44,12 +44,14 @@ const STOMP_VELOCITY = 1000.0
 # DATOS Y HABILIDADES
 # =========================
 
-var es_salto_spin := false
+var es_salto_spin := true
 
-var has_doubleJump := true
+var has_doubleJump := false
 var can_double_jump := false
 
-var has_spindash := true
+var salto := 1.0
+
+var has_spindash := false
 var has_climb := false
 var has_fast_shoe := true
 var has_stomp := true
@@ -108,16 +110,17 @@ func handle_normal(delta: float) -> void:
 			can_double_jump = true
 
 		if Input.is_action_just_pressed("jump"):
-			velocity.y = JUMP_VELOCITY 
+			velocity.y = JUMP_VELOCITY * salto
 			if Input.is_action_pressed("charge"):
-				es_salto_spin = true
-			else:
 				es_salto_spin = false
+			else:
+				es_salto_spin = true
 	
 		elif Input.is_action_pressed("ui_down"):
 			if abs(velocity.x) > MIN_ROLL_SPEED:
-				current_state = State.ROLLING
 				roll_speed = velocity.x
+				velocity = Vector2.ZERO
+				current_state = State.ROLLING
 				roll_distance = 0.0
 				return
 			else:
@@ -125,6 +128,7 @@ func handle_normal(delta: float) -> void:
 				if Input.is_action_just_pressed("charge") and has_spindash:
 					enter_charge()
 					return
+				return
 
 	else:
 		if Input.is_action_just_pressed("jump") and can_double_jump:
@@ -173,6 +177,15 @@ func handle_rolling(delta: float) -> void:
 	roll_speed *= pow(ROLL_FRICTION, delta * 60.0) 
 	velocity.x = roll_speed
 	roll_distance += abs(velocity.x) * delta
+	
+	if is_on_floor() and Input.is_action_just_pressed("jump"):
+		velocity.y = JUMP_VELOCITY * salto
+		es_salto_spin = true
+
+		can_double_jump = true 
+
+		exit_roll()
+		return
 
 	if roll_distance >= MAX_ROLL_DISTANCE or abs(velocity.x) < MIN_ROLL_SPEED:
 		exit_roll()

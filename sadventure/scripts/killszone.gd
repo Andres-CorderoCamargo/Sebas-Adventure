@@ -11,7 +11,8 @@ func _ready() -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	if body is Player:
-		get_tree().reload_current_scene()
+		get_tree().call_deferred("reload_current_scene")
+
 
 # if body is Player:
 #		body.perder_vida()
