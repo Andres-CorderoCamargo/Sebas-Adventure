@@ -133,31 +133,12 @@ offset_top = -280.0
 offset_right = 494.0
 offset_bottom = 279.0
 grow_vertical = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 20
 
 [node name="Panel" type="Panel" parent="VBoxContainer" unique_id=568831741]
-custom_minimum_size = Vector2(0, 160)
+custom_minimum_size = Vector2(15.575, 160)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_rtw2f")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=229212993]
-layout_mode = 2
-alignment = 1
-
-[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=988127703]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_ekxnf")
-theme_override_font_sizes/font_size = 20
-text = "Name : "
-
-[node name="LineEdit" type="LineEdit" parent="VBoxContainer/HBoxContainer" unique_id=513654755]
-clip_contents = true
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_ekxnf")
-theme_override_font_sizes/font_size = 20
-text = "Sebas"
-max_length = 8
 
 [node name="play" type="Button" parent="VBoxContainer" unique_id=2067600439]
 layout_mode = 2
@@ -214,7 +195,6 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_lgwnu")
 theme_override_styles/hover = SubResource("StyleBoxFlat_oa1go")
 text = "Exit game"
 
-[connection signal="text_submitted" from="VBoxContainer/HBoxContainer/LineEdit" to="." method="_on_line_edit_text_submitted"]
 [connection signal="pressed" from="VBoxContainer/play" to="." method="_on_play_pressed"]
 [connection signal="pressed" from="VBoxContainer/shop" to="." method="_on_shop_pressed"]
 [connection signal="pressed" from="VBoxContainer/skin" to="." method="_on_skin_pressed"]

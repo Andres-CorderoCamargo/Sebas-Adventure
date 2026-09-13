@@ -17,11 +17,17 @@
 [ext_resource type="Texture2D" uid="uid://b4iixe0s7jyx1" path="res://Assets/ressources/sprites3.0/charging/c6.png" id="8_nq10l"]
 [ext_resource type="Texture2D" uid="uid://xtcv0hi8yyjo" path="res://Assets/ressources/sprites3.0/charging/c7.png" id="9_cx4al"]
 [ext_resource type="Texture2D" uid="uid://bdvgdop5btl1" path="res://Assets/ressources/sprites3.0/idle/Idle_3.0-8.png" id="9_xuvmo"]
+[ext_resource type="Texture2D" uid="uid://c3pt1ihopnwu1" path="res://Assets/ressources/sprites3.0/crouch/c1.png" id="10_c5epk"]
 [ext_resource type="Texture2D" uid="uid://c5hoske8or7ao" path="res://Assets/ressources/sprites3.0/idle/Idle_3.0-9.png" id="10_rmtvd"]
 [ext_resource type="Texture2D" uid="uid://mkhobd2tqqhu" path="res://Assets/ressources/sprites3.0/idle/Idle_3.0-10.png" id="11_4fibd"]
+[ext_resource type="Texture2D" uid="uid://lh11lob26m2e" path="res://Assets/ressources/sprites3.0/crouch/c2.png" id="11_e88vl"]
 [ext_resource type="Texture2D" uid="uid://4to00gvee6ve" path="res://Assets/ressources/sprites3.0/idle/Idle_3.0-11.png" id="12_3y1qi"]
+[ext_resource type="Texture2D" uid="uid://c1hbot8ewci04" path="res://Assets/ressources/sprites3.0/crouch/c3.png" id="12_u3boi"]
+[ext_resource type="Texture2D" uid="uid://domhpk7yywjvw" path="res://Assets/ressources/sprites3.0/crouch/c4.png" id="13_mk83k"]
 [ext_resource type="Texture2D" uid="uid://m4y7eq3ry4iq" path="res://Assets/ressources/sprites3.0/run/Run_3.0-1.png" id="14_b5esl"]
+[ext_resource type="Texture2D" uid="uid://dwnttdp70tjoi" path="res://Assets/ressources/sprites3.0/crouch/c5.png" id="14_q8scp"]
 [ext_resource type="Texture2D" uid="uid://djr3vl2vrg1gb" path="res://Assets/ressources/sprites3.0/run/Run_3.0-2.png" id="15_2mgme"]
+[ext_resource type="Texture2D" uid="uid://icrh7e35rcmj" path="res://Assets/ressources/sprites3.0/crouch/c6.png" id="15_4ym2l"]
 [ext_resource type="Texture2D" uid="uid://dy3arvn4y7j35" path="res://Assets/ressources/sprites3.0/run/Run_3.0-3.png" id="16_3nvd2"]
 [ext_resource type="Texture2D" uid="uid://d2fp2uas4bj5r" path="res://Assets/ressources/sprites3.0/run/Run_3.0-4.png" id="17_vulma"]
 [ext_resource type="Texture2D" uid="uid://bw5hknwilbh7f" path="res://Assets/ressources/sprites3.0/run/Run_3.0-5.png" id="18_h7hks"]
@@ -76,7 +82,25 @@ animations = [{
 "name": &"charging",
 "speed": 12.0
 }, {
-"frames": [],
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_c5epk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_e88vl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_u3boi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_mk83k")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_q8scp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_4ym2l")
+}],
 "loop": 1,
 "name": &"crouch",
 "speed": 5.0
@@ -327,9 +351,9 @@ autowrap_trim_flags = 64
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
-animation = &"spin"
+animation = &"idle"
 autoplay = "idle"
-frame_progress = 0.33706126
+frame_progress = 0.64248973
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
