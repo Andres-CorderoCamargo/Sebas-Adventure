@@ -40,7 +40,7 @@ const MAX_ROLL_DISTANCE = 600.0
 
 const STOMP_VELOCITY = 1000.0
 
-const MIN_WALL_SPEED: float = 300.0
+const MIN_WALL_SPEED: float = 400.0
 
 # =========================
 # DATOS Y HABILIDADES
@@ -117,7 +117,7 @@ func procesar_gravedad_y_paredes(delta: float) -> void:
 # =========================
 
 func handle_normal(delta: float) -> void:
-	update_facing_direction()
+	update_sprite_orientation(delta)
 
 	if is_on_floor():
 		es_salto_spin = false
@@ -299,7 +299,14 @@ func hitbox_normale() -> void:
 # ANIMACIONES
 # =========================
 
-func update_facing_direction() -> void:
+func update_sprite_orientation(delta: float) -> void:
+	if is_on_floor():
+		var floor_normal: Vector2 = get_floor_normal()
+		var target_angle = floor_normal.angle() + (PI / 2)
+		animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_angle, 15.0 * delta)
+	else:
+		animated_sprite.rotation = lerp_angle(animated_sprite.rotation, 0.0, 10.0 * delta)
+
 	if dir > 0:
 		facing_direction = 1.0
 	elif dir < 0:
