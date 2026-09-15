@@ -8,8 +8,6 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3i8nc"]
 bg_color = Color(0, 0.23137255, 0.7254902, 1)
-border_width_left = 31
-border_color = Color(0, 0, 0, 1)
 corner_radius_top_left = 100
 corner_radius_bottom_right = 100
 corner_detail = 1
@@ -21,31 +19,35 @@ anti_aliasing_size = 0.01
 
 [node name="data_menu" type="Control" unique_id=1155152806]
 layout_mode = 3
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_n4meg")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=325473512]
+[node name="data" type="HBoxContainer" parent="." unique_id=321970425]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -101.5
-offset_top = -58.0
-offset_right = 101.5
-offset_bottom = 58.0
+offset_left = -324.5
+offset_top = -88.0
+offset_right = 324.5
+offset_bottom = 88.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 200
+alignment = 1
 
-[node name="new_game" type="Button" parent="VBoxContainer" unique_id=1612371603]
+[node name="options" type="VBoxContainer" parent="data" unique_id=325473512]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="new_game" type="Button" parent="data/options" unique_id=1612371603]
 layout_mode = 2
 theme_override_constants/outline_size = 16
 theme_override_fonts/font = ExtResource("2_s5wfe")
@@ -55,7 +57,7 @@ theme_override_styles/pressed = ExtResource("4_g4u8u")
 theme_override_styles/hover = ExtResource("5_bgrl1")
 text = "NEW GAME"
 
-[node name="load_game" type="Button" parent="VBoxContainer" unique_id=982486979]
+[node name="load_game" type="Button" parent="data/options" unique_id=982486979]
 layout_mode = 2
 theme_override_constants/outline_size = 16
 theme_override_fonts/font = ExtResource("2_s5wfe")
@@ -65,5 +67,58 @@ theme_override_styles/pressed = ExtResource("4_g4u8u")
 theme_override_styles/hover = SubResource("StyleBoxFlat_3i8nc")
 text = "LOAD GAME"
 
-[connection signal="pressed" from="VBoxContainer/new_game" to="." method="_on_new_game_pressed"]
-[connection signal="pressed" from="VBoxContainer/load_game" to="." method="_on_load_game_pressed"]
+[node name="preview" type="VBoxContainer" parent="data" unique_id=149463406]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="data/preview" unique_id=49384003]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="labels" type="VBoxContainer" parent="data/preview/HBoxContainer" unique_id=1683585603]
+layout_mode = 2
+
+[node name="name" type="Label" parent="data/preview/HBoxContainer/labels" unique_id=1057627737]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_s5wfe")
+theme_override_font_sizes/font_size = 20
+text = "Name : "
+
+[node name="nbrings" type="Label" parent="data/preview/HBoxContainer/labels" unique_id=453291469]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_s5wfe")
+theme_override_font_sizes/font_size = 20
+text = "Rings : "
+
+[node name="level" type="Label" parent="data/preview/HBoxContainer/labels" unique_id=1226994090]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_s5wfe")
+theme_override_font_sizes/font_size = 20
+text = "Level : "
+
+[node name="info" type="VBoxContainer" parent="data/preview/HBoxContainer" unique_id=1542965825]
+layout_mode = 2
+
+[node name="nom" type="Label" parent="data/preview/HBoxContainer/info" unique_id=628240338]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_s5wfe")
+theme_override_font_sizes/font_size = 20
+text = "Sebas"
+
+[node name="rings" type="Label" parent="data/preview/HBoxContainer/info" unique_id=1065457730]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_s5wfe")
+theme_override_font_sizes/font_size = 20
+text = "0"
+
+[node name="level" type="Label" parent="data/preview/HBoxContainer/info" unique_id=308067086]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_s5wfe")
+theme_override_font_sizes/font_size = 20
+text = "L1"
+
+[node name="Panel" type="Panel" parent="data/preview/HBoxContainer" unique_id=1097551570]
+custom_minimum_size = Vector2(176, 176)
+layout_mode = 2
+
+[connection signal="pressed" from="data/options/new_game" to="." method="_on_new_game_pressed"]
+[connection signal="pressed" from="data/options/load_game" to="." method="_on_load_game_pressed"]
