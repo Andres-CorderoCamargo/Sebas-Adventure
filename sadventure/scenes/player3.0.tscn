@@ -289,6 +289,8 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_c5epk"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rl4cl"]
 size = Vector2(33, 42)
 
@@ -301,6 +303,9 @@ light_mask = 10
 visibility_layer = 9
 collision_layer = 2
 collision_mask = 15
+floor_max_angle = 3.1241393
+floor_snap_length = 16.0
+platform_wall_layers = 65535
 script = ExtResource("1_jaxwb")
 metadata/_custom_type_script = "uid://bambb440g2ker"
 
@@ -352,11 +357,12 @@ autowrap_trim_flags = 64
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
-animation = &"spin"
+animation = &"idle"
 autoplay = "idle"
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
+material = SubResource("CanvasItemMaterial_c5epk")
 position = Vector2(0.5, 1)
 shape = SubResource("RectangleShape2D_rl4cl")
 

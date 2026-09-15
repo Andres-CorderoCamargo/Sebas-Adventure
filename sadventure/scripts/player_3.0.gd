@@ -48,11 +48,10 @@ const MIN_WALL_SPEED: float = 400.0
 
 var es_salto_spin := true
 
-var has_doubleJump := false
+var has_doubleJump := true
 var can_double_jump := false
 
 var salto := 1.0
-
 
 var has_spindash := true
 var has_climb := false
@@ -101,7 +100,7 @@ func _physics_process(delta: float) -> void:
 
 func procesar_gravedad_y_paredes(delta: float) -> void:
 	var velocidad_actual: float = velocity.length()
-	var tocando_superficie: bool = is_on_floor() or is_on_wall()
+	var tocando_superficie: bool = is_on_floor() or is_on_wall() or is_on_ceiling()
 
 	if tocando_superficie and velocidad_actual >= MIN_WALL_SPEED:
 		var normal: Vector2 = get_floor_normal()
@@ -111,6 +110,12 @@ func procesar_gravedad_y_paredes(delta: float) -> void:
 	else:
 		up_direction = Vector2.UP
 		velocity.y += gravity * delta
+	
+	var angle_surface = Vector2.UP.angle_to(up_direction)
+	
+	hitbox_normal.global_rotation = angle_surface
+	hitbox_spin.global_rotation = angle_surface
+
 
 # =========================
 # MANEJO DE ESTADOS
