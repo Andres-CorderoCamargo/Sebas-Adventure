@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bi1stustbhkep"]
 
 [ext_resource type="Script" uid="uid://bambb440g2ker" path="res://scripts/player_3.0.gd" id="1_jaxwb"]
-[ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="2_hif46"]
 [ext_resource type="Texture2D" uid="uid://cx8x7lb4mm4qv" path="res://Assets/ressources/sprites3.0/idle/Idle_3.0-1.png" id="2_p0674"]
 [ext_resource type="Texture2D" uid="uid://cc8t7ybksfwbi" path="res://Assets/ressources/sprites3.0/charging/c1.png" id="3_chxng"]
 [ext_resource type="Texture2D" uid="uid://ct8dd7p5lis1" path="res://Assets/ressources/sprites3.0/idle/Idle_3.0-2.png" id="3_hif46"]
@@ -289,8 +288,6 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_c5epk"]
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_rl4cl"]
 size = Vector2(33, 42)
 
@@ -311,50 +308,6 @@ metadata/_custom_type_script = "uid://bambb440g2ker"
 
 [node name="TimerInactividad" type="Timer" parent="." unique_id=153109822]
 
-[node name="CL" type="CanvasLayer" parent="." unique_id=1772671973]
-follow_viewport_enabled = true
-
-[node name="nomJoueur" type="Label" parent="CL" unique_id=2006798923]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = -150.0
-offset_top = -612.0
-offset_right = -88.0
-offset_bottom = -577.0
-grow_vertical = 0
-theme_override_colors/font_color = Color(1, 0.6666667, 0, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/shadow_outline_size = 0
-theme_override_fonts/font = ExtResource("2_hif46")
-theme_override_font_sizes/font_size = 10
-text = "Sebas"
-vertical_alignment = 2
-autowrap_trim_flags = 64
-metadata/_edit_use_anchors_ = true
-
-[node name="numVidas" type="Label" parent="CL" unique_id=1554399930]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = -150.0
-offset_top = -596.0
-offset_right = -88.0
-offset_bottom = -561.0
-grow_vertical = 0
-theme_override_colors/font_color = Color(1, 0.6666667, 0, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/shadow_outline_size = 0
-theme_override_fonts/font = ExtResource("2_hif46")
-theme_override_font_sizes/font_size = 10
-text = "x 3"
-vertical_alignment = 2
-autowrap_trim_flags = 64
-
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
 animation = &"idle"
@@ -362,7 +315,6 @@ autoplay = "idle"
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
-material = SubResource("CanvasItemMaterial_c5epk")
 position = Vector2(0.5, 1)
 shape = SubResource("RectangleShape2D_rl4cl")
 

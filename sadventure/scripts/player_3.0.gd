@@ -40,8 +40,6 @@ const MAX_ROLL_DISTANCE = 600.0
 
 const STOMP_VELOCITY = 1000.0
 
-const MIN_WALL_SPEED: float = 400.0
-
 # =========================
 # DATOS Y HABILIDADES
 # =========================
@@ -82,9 +80,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	dir = Input.get_axis("ui_left", "ui_right")
-
-	procesar_gravedad_y_paredes(delta)
-
+	apply_gravity(delta)
 	match current_state:
 		State.NORMAL:   handle_normal(delta)
 		State.BRAKING:  handle_braking(delta)
@@ -97,25 +93,6 @@ func _physics_process(delta: float) -> void:
 	
 	update_animation()
 	alternar_hitbox()
-
-func procesar_gravedad_y_paredes(delta: float) -> void:
-	var velocidad_actual: float = velocity.length()
-	var tocando_superficie: bool = is_on_floor() or is_on_wall() or is_on_ceiling()
-
-	if tocando_superficie and velocidad_actual >= MIN_WALL_SPEED:
-		var normal: Vector2 = get_floor_normal()
-		if normal != Vector2.ZERO:
-			up_direction = normal
-			velocity -= normal * 100.0 * delta
-	else:
-		up_direction = Vector2.UP
-		velocity.y += gravity * delta
-	
-	var angle_surface = Vector2.UP.angle_to(up_direction)
-	
-	hitbox_normal.global_rotation = angle_surface
-	hitbox_spin.global_rotation = angle_surface
-
 
 # =========================
 # MANEJO DE ESTADOS
@@ -305,12 +282,7 @@ func hitbox_normale() -> void:
 # =========================
 
 func update_sprite_orientation(delta: float) -> void:
-	if is_on_floor():
-		var floor_normal: Vector2 = get_floor_normal()
-		var target_angle = floor_normal.angle() + (PI / 2)
-		animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_angle, 15.0 * delta)
-	else:
-		animated_sprite.rotation = lerp_angle(animated_sprite.rotation, 0.0, 10.0 * delta)
+	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, 0.0, 10.0 * delta)
 
 	if dir > 0:
 		facing_direction = 1.0
