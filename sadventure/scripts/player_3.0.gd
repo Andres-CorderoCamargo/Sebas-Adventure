@@ -51,6 +51,8 @@ const STICK_FORCE = 20.0
 
 const STEP_HEIGHT = 8.0
 
+const WALL_DRAG = 150.0
+
 # =========================
 # DATOS Y HABILIDADES
 # =========================
@@ -149,13 +151,16 @@ func handle_normal(delta: float) -> void:
 		if is_on_wall() and dir != 0:
 			try_step_up(dir)
 
-		# La pendiente pesa menos si empujas, y nada si vas rápido por una pared
+		var steep := n.y > -0.7   # pared, techo o curva muy inclinada
+
 		var slope_force := tangent.y * SLOPE_FORCE_RUN
 		if dir != 0:
 			slope_force *= 0.15
-		if n.y > -0.7 and abs(ground_speed) >= MIN_WALL_SPEED:
-			slope_force = 0.0
 		ground_speed += slope_force * delta
+
+		# En superficies empinadas siempre pierdes velocidad
+		if steep:
+			ground_speed = move_toward(ground_speed, 0.0, WALL_DRAG * delta)
 
 		# Salto ---
 		if Input.is_action_just_pressed("jump"):
@@ -262,8 +267,8 @@ func handle_rolling(delta: float) -> void:
 
 		velocity = tangent * roll_speed - n * STICK_FORCE
 
-		if n.y > -0.7 and abs(roll_speed) < MIN_WALL_SPEED:
-			detach_from_surface()
+		if n.y > -0.7:
+			roll_speed = move_toward(roll_speed, 0.0, WALL_DRAG * delta)
 			return
 
 		if Input.is_action_just_pressed("jump"):
