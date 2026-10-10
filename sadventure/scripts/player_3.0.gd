@@ -29,7 +29,7 @@ const ACCEL = 125.0
 const DECEL = 560.0
 const JUMP_VELOCITY = -300.0
 
-const ACCEL_GROUND = 120.0
+const ACCEL_GROUND = 280.0
 const ACCEL_AIR = 300.0
 
 const MAX_ROLL_SPEED = 600.0
@@ -39,6 +39,17 @@ const MAX_CHARGE_TIME = 3.0
 const MAX_ROLL_DISTANCE = 600.0
 
 const STOMP_VELOCITY = 1000.0
+
+const SLOPE_FORCE_RUN = 100.0
+
+const SLOPE_ROLL_DOWN = 600.0
+const SLOPE_ROLL_UP = 250.0
+const MIN_WALL_SPEED = 180.0
+
+const BRAKE_DECEL = 560.0
+const STICK_FORCE = 20.0
+
+const STEP_HEIGHT = 8.0
 
 # =========================
 # DATOS Y HABILIDADES
@@ -70,17 +81,34 @@ var charge_time := 0.0
 var roll_speed := 0.0
 var roll_distance := 0.0
 
+var detach_timer := 0.0
+
+var floor_grace := 0.0
+var last_floor_normal := Vector2.UP
+
+var smooth_normal := Vector2.UP
+
 # =========================
 # BUCLE PRINCIPAL
 # =========================
 
 func _ready() -> void:
+	floor_max_angle = deg_to_rad(60.0)
+	safe_margin = 0.1
+	floor_snap_length = 16.0
+	floor_stop_on_slope = false
+	floor_constant_speed = false
+	floor_block_on_wall = true
+
 	if not timerIn.timeout.is_connected(_on_timer_timeout):
 		timerIn.timeout.connect(_on_timer_timeout)
 
 func _physics_process(delta: float) -> void:
+	detach_timer = max(detach_timer - delta, 0.0)
 	dir = Input.get_axis("ui_left", "ui_right")
+	update_up_direction()
 	apply_gravity(delta)
+
 	match current_state:
 		State.NORMAL:   handle_normal(delta)
 		State.BRAKING:  handle_braking(delta)
@@ -90,45 +118,85 @@ func _physics_process(delta: float) -> void:
 
 	controlar_timer_inactividad()
 	move_and_slide()
-	
+
+	update_floor_grace(delta)
+	update_sprite_orientation(delta)
 	update_animation()
 	alternar_hitbox()
-
+	# Linea magica debugeadora
+	# print("floor=", is_on_floor(), " wall=", is_on_wall(), " n=", get_floor_normal(), " vel=", velocity.snapped(Vector2(0.1, 0.1)), " state=", current_state)
 # =========================
 # MANEJO DE ESTADOS
 # =========================
 
 func handle_normal(delta: float) -> void:
-	update_sprite_orientation(delta)
-
-	if is_on_floor():
+	if is_on_floor() and detach_timer <= 0.0:
 		es_salto_spin = false
-		
 		if has_doubleJump:
 			can_double_jump = true
 
+		var n := get_floor_normal()
+		var tangent := Vector2(-n.y, n.x)
+		var ground_speed := velocity.dot(tangent)
+
+		# Superficie muy empinada y poca velocidad: te despegas y caes
+		if n.y > -0.7 and abs(ground_speed) < MIN_WALL_SPEED:
+			detach_timer = 0.2
+			velocity = n * 80.0
+			return
+
+		# Escalón pequeño: si empujas contra una pared, intenta subirla
+		if is_on_wall() and dir != 0:
+			try_step_up(dir)
+
+		# La pendiente pesa menos si empujas, y nada si vas rápido por una pared
+		var slope_force := tangent.y * SLOPE_FORCE_RUN
+		if dir != 0:
+			slope_force *= 0.15
+		if n.y > -0.7 and abs(ground_speed) >= MIN_WALL_SPEED:
+			slope_force = 0.0
+		ground_speed += slope_force * delta
+
+		# Salto ---
 		if Input.is_action_just_pressed("jump"):
-			velocity.y = JUMP_VELOCITY * salto
-			if Input.is_action_pressed("charge"):
-				es_salto_spin = false
-			else:
-				es_salto_spin = true
-	
-		elif Input.is_action_pressed("ui_down"):
-			if abs(velocity.x) > MIN_ROLL_SPEED:
-				roll_speed = velocity.x
+			velocity = tangent * ground_speed + n * (-JUMP_VELOCITY * salto)
+			es_salto_spin = not Input.is_action_pressed("charge")
+			return
+
+		# Agacharse / rodar
+		if Input.is_action_pressed("ui_down"):
+			if abs(ground_speed) > MIN_ROLL_SPEED:
+				roll_speed = ground_speed
 				velocity = Vector2.ZERO
-				current_state = State.ROLLING
 				roll_distance = 0.0
+				current_state = State.ROLLING
 				return
 			else:
-				velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+				ground_speed = move_toward(ground_speed, 0.0, DECEL * delta)
+				velocity = tangent * ground_speed - n * STICK_FORCE
 				if Input.is_action_just_pressed("charge") and has_spindash:
 					enter_charge()
-					return
 				return
 
+		# Frenar (antes de acelerar)
+		if dir != 0 and sign(dir) != sign(ground_speed) and abs(ground_speed) > MAX_SPEED * 0.6:
+			velocity = tangent * ground_speed - n * STICK_FORCE
+			current_state = State.BRAKING
+			return
+
+		# Correr
+		if dir != 0:
+			var speed_modifier = 1.5 if has_fast_shoe else 1.0
+			var target_speed = dir * MAX_SPEED * speed_modifier
+			ground_speed = move_toward(ground_speed, target_speed, ACCEL_GROUND * delta)
+		else:
+			var decel := DECEL * clampf(-n.y, 0.0, 1.0)
+			ground_speed = move_toward(ground_speed, 0.0, decel * delta)
+
+		velocity = tangent * ground_speed - n * STICK_FORCE
+
 	else:
+		# En el aire
 		if Input.is_action_just_pressed("jump") and can_double_jump:
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
@@ -138,23 +206,27 @@ func handle_normal(delta: float) -> void:
 			enter_stomp()
 			return
 
-	if dir != 0:
-		var speed_modifier = 1.5 if has_fast_shoe else 1.0
-		var target_speed = dir * MAX_SPEED * speed_modifier
-		var current_accel = ACCEL_GROUND if is_on_floor() else ACCEL_AIR
-		
-		velocity.x = move_toward(velocity.x, target_speed, current_accel * delta)
-
-		if is_on_floor() and sign(dir) != sign(velocity.x) and abs(velocity.x) > (MAX_SPEED * 0.6):
-			current_state = State.BRAKING
-			return
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+		if dir != 0:
+			var speed_modifier = 1.5 if has_fast_shoe else 1.0
+			velocity.x = move_toward(velocity.x, dir * MAX_SPEED * speed_modifier, ACCEL_AIR * delta)
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
 
 func handle_braking(delta: float) -> void:
-	velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+	if not is_on_floor():
+		current_state = State.NORMAL
+		return
 
-	if dir == 0 or abs(velocity.x) <= MIN_ROLL_SPEED or sign(dir) == sign(velocity.x):
+	var n := get_floor_normal()
+	var tangent := Vector2(-n.y, n.x)
+	var ground_speed := velocity.dot(tangent)
+
+	ground_speed += tangent.y * SLOPE_FORCE_RUN * delta
+	ground_speed = move_toward(ground_speed, 0.0, BRAKE_DECEL * delta)
+
+	velocity = tangent * ground_speed - n * STICK_FORCE
+
+	if dir == 0 or abs(ground_speed) <= MIN_ROLL_SPEED or sign(dir) == sign(ground_speed):
 		current_state = State.NORMAL
 
 func handle_charging(delta: float) -> void:
@@ -172,20 +244,39 @@ func handle_charging(delta: float) -> void:
 		enter_roll()
 
 func handle_rolling(delta: float) -> void:
-	roll_speed *= pow(ROLL_FRICTION, delta * 60.0) 
-	velocity.x = roll_speed
-	roll_distance += abs(velocity.x) * delta
-	
-	if is_on_floor() and Input.is_action_just_pressed("jump"):
-		velocity.y = JUMP_VELOCITY * salto
-		es_salto_spin = true
+	if is_on_floor():
+		var n := get_floor_normal()
+		var tangent := Vector2(-n.y, n.x)
+		var plano := clampf(-n.y, 0.0, 1.0)   # 1 = suelo plano, 0 = pared
 
-		can_double_jump = true 
+		# La fricción solo actúa en suelo plano
+		var friccion := lerpf(1.0, ROLL_FRICTION, plano)
+		roll_speed *= pow(friccion, delta * 60.0)
 
-		exit_roll()
-		return
+		# Pendiente: subir frena poco, y menos aún en paredes
+		var bajando := roll_speed * tangent.y > 0.0
+		var fuerza := SLOPE_ROLL_DOWN
+		if not bajando:
+			fuerza = SLOPE_ROLL_UP * lerpf(0.4, 1.0, plano)
+		roll_speed += tangent.y * fuerza * delta
 
-	if roll_distance >= MAX_ROLL_DISTANCE or abs(velocity.x) < MIN_ROLL_SPEED:
+		velocity = tangent * roll_speed - n * STICK_FORCE
+
+		if n.y > -0.7 and abs(roll_speed) < MIN_WALL_SPEED:
+			detach_from_surface()
+			return
+
+		if Input.is_action_just_pressed("jump"):
+			velocity = tangent * roll_speed + n * (-JUMP_VELOCITY * salto)
+			es_salto_spin = true
+			can_double_jump = true
+			exit_roll()
+			return
+	else:
+		roll_speed *= pow(ROLL_FRICTION, delta * 60.0)
+		velocity.x = roll_speed
+
+	if abs(roll_speed) < MIN_ROLL_SPEED:
 		exit_roll()
 
 func handle_stomping(_delta: float) -> void:
@@ -241,15 +332,38 @@ func exit_stomp() -> void:
 # UTILIDADES Y SISTEMAS
 # =========================
 
+func update_up_direction() -> void:
+	if detach_timer > 0.0:
+		up_direction = Vector2.UP
+		return
+
+	var en_superficie := current_state == State.NORMAL or current_state == State.ROLLING or current_state == State.BRAKING
+
+	if is_on_floor() and en_superficie:
+		var n := get_floor_normal()
+		var muy_inclinada := n.y > -0.7   # más de ~45°
+		if muy_inclinada and velocity.length() >= MIN_WALL_SPEED:
+			up_direction = n
+		else:
+			up_direction = Vector2.UP
+	else:
+		up_direction = Vector2.UP
+
 func apply_gravity(delta: float) -> void:
-	if not is_on_floor() and current_state != State.CHARGING:
-		velocity.y += gravity * delta
+	var pegado := detach_timer <= 0.0 and is_on_floor() and (current_state == State.NORMAL or current_state == State.ROLLING or current_state == State.BRAKING)
+	if pegado:
+		return
+	velocity.y += gravity * delta
+
+func detach_from_surface() -> void:
+	up_direction = Vector2.UP
+	exit_roll()
 
 func esta_invulnerable() -> bool:
 	return current_state == State.ROLLING or current_state == State.STOMPING
 
 func controlar_timer_inactividad() -> void:
-	if dir == 0 and velocity.x == 0 and is_on_floor() and current_state == State.NORMAL:
+	if dir == 0 and velocity.length() < 25.0 and is_on_floor() and current_state == State.NORMAL:
 		if timerIn.is_stopped():
 			timerIn.start(40.0)
 	else:
@@ -258,6 +372,33 @@ func controlar_timer_inactividad() -> void:
 
 func _on_timer_timeout() -> void:
 	get_tree().quit()
+
+func try_step_up(direction: float) -> void:
+	if direction == 0.0:
+		return
+
+	var forward := Vector2(sign(direction) * 2.0, 0.0)
+
+	var h := 1.0
+	while h <= STEP_HEIGHT:
+		var raised := global_transform.translated(Vector2(0, -h))
+		# Libre arriba (no choca al subir) y libre al avanzar desde ahí
+		if not test_move(global_transform, Vector2(0, -h)) and not test_move(raised, forward):
+			global_position.y -= h
+			return
+		h += 1.0
+
+func update_floor_grace(delta: float) -> void:
+	if is_on_floor():
+		floor_grace = 0.08
+		last_floor_normal = get_floor_normal()
+		smooth_normal = smooth_normal.lerp(last_floor_normal, 12.0 * delta).normalized()
+	else:
+		floor_grace = max(floor_grace - delta, 0.0)
+		smooth_normal = smooth_normal.lerp(Vector2.UP, 6.0 * delta).normalized()
+
+func en_suelo() -> bool:
+	return floor_grace > 0.0
 
 # =========================
 # ALTERNAR HITBOX
@@ -282,9 +423,22 @@ func hitbox_normale() -> void:
 # =========================
 
 func update_sprite_orientation(delta: float) -> void:
-	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, 0.0, 10.0 * delta)
+	var target_rotation := 0.0
 
-	if dir > 0:
+	var girando := current_state == State.ROLLING \
+		or current_state == State.STOMPING \
+		or current_state == State.CHARGING
+
+	if en_suelo() and not girando:
+		var ang := smooth_normal.angle() + PI / 2.0
+		if abs(ang) > deg_to_rad(8.0):
+			target_rotation = ang
+
+	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_rotation, 12.0 * delta)
+
+	if current_state == State.BRAKING:
+		pass
+	elif dir > 0:
 		facing_direction = 1.0
 	elif dir < 0:
 		facing_direction = -1.0
@@ -292,29 +446,29 @@ func update_sprite_orientation(delta: float) -> void:
 
 func update_animation() -> void:
 	match current_state:
-		State.BRAKING:  return
+		State.BRAKING:
+			return
 		State.CHARGING:
 			set_anim("charging")
 			return
-		State.STOMPING:
-			set_anim("spin")
-			return
-		State.ROLLING:
+		State.STOMPING, State.ROLLING:
 			set_anim("spin")
 			return
 
-	if not is_on_floor():
+	var speed := velocity.length()
+
+	if not en_suelo():
 		if es_salto_spin:
 			set_anim("spin")
 		else:
 			set_anim("jump")
-	elif Input.is_action_pressed("ui_down") and abs(velocity.x) < 10.0:
+	elif Input.is_action_pressed("ui_down") and speed < 10.0:
 		set_anim("crouch")
-	elif abs(velocity.x) > 250:
+	elif speed > 250:
 		set_anim("run")
-	elif abs(velocity.x) > 150:
+	elif speed > 150:
 		set_anim("fastwalk")
-	elif abs(velocity.x) > 0:
+	elif speed > 25:
 		set_anim("walk")
 	else:
 		set_anim("idle")

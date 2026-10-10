@@ -288,8 +288,10 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_rl4cl"]
-size = Vector2(33, 42)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cx4al"]
+custom_solver_bias = 0.226
+radius = 12.5
+height = 42.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u5sy4"]
 radius = 15.0
@@ -316,7 +318,7 @@ autoplay = "idle"
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
 position = Vector2(0.5, 1)
-shape = SubResource("RectangleShape2D_rl4cl")
+shape = SubResource("CapsuleShape2D_cx4al")
 
 [node name="HitboxSpin" type="CollisionShape2D" parent="." unique_id=84206285]
 position = Vector2(0.5, 7)
