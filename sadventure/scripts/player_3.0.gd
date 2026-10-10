@@ -25,7 +25,6 @@ enum State { NORMAL, BRAKING, CHARGING, ROLLING, CLIMBING, STOMPING }
 # =========================
 
 const MAX_SPEED = 250.0
-const ACCEL = 125.0
 const DECEL = 560.0
 const JUMP_VELOCITY = -300.0
 
@@ -36,7 +35,6 @@ const MAX_ROLL_SPEED = 600.0
 const MIN_ROLL_SPEED = 80.0
 const ROLL_FRICTION = 0.995
 const MAX_CHARGE_TIME = 3.0
-const MAX_ROLL_DISTANCE = 600.0
 
 const STOMP_VELOCITY = 1000.0
 
@@ -59,15 +57,9 @@ const WALL_DRAG = 150.0
 
 var es_salto_spin := true
 
-var has_doubleJump := true
 var can_double_jump := false
 
 var salto := 1.0
-
-var has_spindash := true
-var has_climb := false
-var has_fast_shoe := true
-var has_stomp := true
 
 # =========================
 # VARIABLES DE ESTADO Y FÍSICAS
@@ -81,14 +73,21 @@ var facing_direction := 1.0
 
 var charge_time := 0.0
 var roll_speed := 0.0
-var roll_distance := 0.0
 
 var detach_timer := 0.0
 
 var floor_grace := 0.0
-var last_floor_normal := Vector2.UP
 
 var smooth_normal := Vector2.UP
+
+
+var abilities := {
+	ABILITIES.DOUBLEJUMP: true,
+	ABILITIES.FAST: true,
+	ABILITIES.SPINDASH: true,
+	ABILITIES.CLIMB: false,
+	ABILITIES.STOMP: true
+}
 
 # =========================
 # BUCLE PRINCIPAL
@@ -134,7 +133,7 @@ func _physics_process(delta: float) -> void:
 func handle_normal(delta: float) -> void:
 	if is_on_floor() and detach_timer <= 0.0:
 		es_salto_spin = false
-		if has_doubleJump:
+		if has_abilities(ABILITIES.DOUBLEJUMP):
 			can_double_jump = true
 
 		var n := get_floor_normal()
@@ -147,9 +146,9 @@ func handle_normal(delta: float) -> void:
 			velocity = n * 80.0
 			return
 
-		# Escalón pequeño: si empujas contra una pared, intenta subirla
-		if is_on_wall() and dir != 0:
-			try_step_up(dir)
+		## Escalón pequeño: si empujas contra una pared, intenta subirla
+		#if is_on_wall() and dir != 0:
+			#try_step_up(dir)
 
 		var steep := n.y > -0.7   # pared, techo o curva muy inclinada
 
@@ -173,13 +172,12 @@ func handle_normal(delta: float) -> void:
 			if abs(ground_speed) > MIN_ROLL_SPEED:
 				roll_speed = ground_speed
 				velocity = Vector2.ZERO
-				roll_distance = 0.0
 				current_state = State.ROLLING
 				return
 			else:
 				ground_speed = move_toward(ground_speed, 0.0, DECEL * delta)
 				velocity = tangent * ground_speed - n * STICK_FORCE
-				if Input.is_action_just_pressed("charge") and has_spindash:
+				if Input.is_action_just_pressed("charge") and has_abilities(ABILITIES.SPINDASH):
 					enter_charge()
 				return
 
@@ -191,7 +189,7 @@ func handle_normal(delta: float) -> void:
 
 		# Correr
 		if dir != 0:
-			var speed_modifier = 1.5 if has_fast_shoe else 1.0
+			var speed_modifier = 1.5 if has_abilities(ABILITIES.FAST) else 1.0
 			var target_speed = dir * MAX_SPEED * speed_modifier
 			ground_speed = move_toward(ground_speed, target_speed, ACCEL_GROUND * delta)
 		else:
@@ -207,12 +205,12 @@ func handle_normal(delta: float) -> void:
 			can_double_jump = false
 			es_salto_spin = true
 
-		if Input.is_action_just_pressed("charge") and has_stomp:
+		if Input.is_action_just_pressed("charge") and has_abilities(ABILITIES.STOMP):
 			enter_stomp()
 			return
 
 		if dir != 0:
-			var speed_modifier = 1.5 if has_fast_shoe else 1.0
+			var speed_modifier = 1.5 if has_abilities(ABILITIES.FAST) else 1.0
 			velocity.x = move_toward(velocity.x, dir * MAX_SPEED * speed_modifier, ACCEL_AIR * delta)
 		else:
 			velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
@@ -269,7 +267,6 @@ func handle_rolling(delta: float) -> void:
 
 		if n.y > -0.7:
 			roll_speed = move_toward(roll_speed, 0.0, WALL_DRAG * delta)
-			return
 
 		if Input.is_action_just_pressed("jump"):
 			velocity = tangent * roll_speed + n * (-JUMP_VELOCITY * salto)
@@ -297,19 +294,17 @@ func handle_stomping(_delta: float) -> void:
 # TRANSICIONES Y ACCIONES
 # =========================
 
-func enter_charge() -> void: #No utilisada de momento
+func enter_charge() -> void:
 	current_state = State.CHARGING
 	velocity = Vector2.ZERO
-	hitbox_spinning()
 	charge_time = 0.0
-	hitbox_normale()
 
 func exit_charge() -> void:
 	current_state = State.NORMAL
-	charge_time = 0.0;
+	charge_time = 0.0
 
 func enter_roll() -> void:
-	if not has_spindash:
+	if not has_abilities(ABILITIES.SPINDASH):
 		exit_charge()
 		return
 
@@ -317,13 +312,11 @@ func enter_roll() -> void:
 	var charge_percent = charge_time / MAX_CHARGE_TIME
 	
 	roll_speed = lerp(MIN_ROLL_SPEED, MAX_ROLL_SPEED, charge_percent) * facing_direction
-	roll_distance = 0.0
 	velocity.x = roll_speed
 
 func exit_roll() -> void:
 	current_state = State.NORMAL
 	roll_speed = 0.0
-	roll_distance = 0.0
 
 func enter_stomp() -> void:
 	current_state = State.STOMPING
@@ -336,6 +329,12 @@ func exit_stomp() -> void:
 # =========================
 # UTILIDADES Y SISTEMAS
 # =========================
+
+func has_abilities(a: ABILITIES) -> bool:
+	return abilities.get(a, false)
+
+func unlock_habilities(a: ABILITIES) -> void: # para la futura tienda !
+	abilities[a] = true
 
 func update_up_direction() -> void:
 	if detach_timer > 0.0:
@@ -376,28 +375,28 @@ func controlar_timer_inactividad() -> void:
 			timerIn.stop()
 
 func _on_timer_timeout() -> void:
-	get_tree().quit()
+	if OS.has_feature("editor"):
+		get_tree().quit()
 
-func try_step_up(direction: float) -> void:
-	if direction == 0.0:
-		return
-
-	var forward := Vector2(sign(direction) * 2.0, 0.0)
-
-	var h := 1.0
-	while h <= STEP_HEIGHT:
-		var raised := global_transform.translated(Vector2(0, -h))
-		# Libre arriba (no choca al subir) y libre al avanzar desde ahí
-		if not test_move(global_transform, Vector2(0, -h)) and not test_move(raised, forward):
-			global_position.y -= h
-			return
-		h += 1.0
+#func try_step_up(direction: float) -> void:
+	#if direction == 0.0:
+		#return
+#
+	#var forward := Vector2(sign(direction) * 2.0, 0.0)
+#
+	#var h := 1.0
+	#while h <= STEP_HEIGHT:
+		#var raised := global_transform.translated(Vector2(0, -h))
+		## Libre arriba (no choca al subir) y libre al avanzar desde ahí
+		#if not test_move(global_transform, Vector2(0, -h)) and not test_move(raised, forward):
+			#global_position.y -= h
+			#return
+		#h += 1.0
 
 func update_floor_grace(delta: float) -> void:
 	if is_on_floor():
 		floor_grace = 0.08
-		last_floor_normal = get_floor_normal()
-		smooth_normal = smooth_normal.lerp(last_floor_normal, 12.0 * delta).normalized()
+		smooth_normal = smooth_normal.lerp(get_floor_normal(), 12.0 * delta).normalized()
 	else:
 		floor_grace = max(floor_grace - delta, 0.0)
 		smooth_normal = smooth_normal.lerp(Vector2.UP, 6.0 * delta).normalized()
