@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://yopos0ptfj1g"]
+
+[ext_resource type="Script" uid="uid://bn0l8f0fla21v" path="res://scripts/hud.gd" id="1_ahhtf"]
+[ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="2_5ysmq"]
+[ext_resource type="StyleBox" uid="uid://p7jymo8qkyws" path="res://effetsButton/label.tres" id="3_6fi6k"]
+[ext_resource type="Texture2D" uid="uid://cplvsau325y45" path="res://icon.svg" id="4_6fi6k"]
+[ext_resource type="LabelSettings" uid="uid://dot0bl7241r2w" path="res://effetsLabel/nom.tres" id="5_uo2fv"]
+
+[node name="HUD" type="CanvasLayer" unique_id=771418113]
+follow_viewport_scale = 1.5
+script = ExtResource("1_ahhtf")
+
+[node name="Control" type="Control" parent="." unique_id=937847447]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="vcontainer" type="VBoxContainer" parent="Control" unique_id=2001286202]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 80.0
+offset_bottom = 80.0
+theme_override_constants/separation = 10
+
+[node name="scoreL" type="Label" parent="Control/vcontainer" unique_id=1328813099]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_5ysmq")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_6fi6k")
+text = "SCORE : 000"
+
+[node name="RingsL" type="Label" parent="Control/vcontainer" unique_id=627377569]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_5ysmq")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_6fi6k")
+text = "RINGS : 000"
+
+[node name="hcontainer" type="HBoxContainer" parent="Control" unique_id=40441083]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -80.0
+offset_right = 80.0
+offset_bottom = -40.0
+grow_vertical = 0
+theme_override_constants/separation = 15
+
+[node name="TextureRect" type="TextureRect" parent="Control/hcontainer" unique_id=253753917]
+layout_mode = 2
+texture = ExtResource("4_6fi6k")
+expand_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/hcontainer" unique_id=2010221038]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="nameL" type="Label" parent="Control/hcontainer/VBoxContainer" unique_id=1560202857]
+layout_mode = 2
+text = "SEBAS"
+label_settings = ExtResource("5_uo2fv")
+
+[node name="vidaL" type="Label" parent="Control/hcontainer/VBoxContainer" unique_id=1432518838]
+layout_mode = 2
+text = "x 3"
+label_settings = ExtResource("5_uo2fv")
