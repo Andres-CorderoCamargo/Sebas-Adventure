@@ -146,6 +146,11 @@ animations = [{
 "name": &"hit",
 "speed": 5.0
 }, {
+"frames": [],
+"loop": 1,
+"name": &"hurt",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("2_p0674")
@@ -288,10 +293,8 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cx4al"]
-custom_solver_bias = 0.226
-radius = 12.5
-height = 42.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cx4al"]
+size = Vector2(31, 40)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u5sy4"]
 radius = 15.0
@@ -308,17 +311,19 @@ platform_wall_layers = 65535
 script = ExtResource("1_jaxwb")
 metadata/_custom_type_script = "uid://bambb440g2ker"
 
-[node name="TimerInactividad" type="Timer" parent="." unique_id=153109822]
+[node name="timInaAnim" type="Timer" parent="." unique_id=153109822]
+
+[node name="timInaDead" type="Timer" parent="." unique_id=1955501592]
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
-animation = &"idle"
+animation = &"charging"
 autoplay = "idle"
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
-position = Vector2(0.5, 1)
-shape = SubResource("CapsuleShape2D_cx4al")
+position = Vector2(0.5, 2)
+shape = SubResource("RectangleShape2D_cx4al")
 
 [node name="HitboxSpin" type="CollisionShape2D" parent="." unique_id=84206285]
 position = Vector2(0.5, 7)
@@ -328,7 +333,7 @@ disabled = true
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1193871510]
 position = Vector2(6, -9)
-zoom = Vector2(3, 3)
+zoom = Vector2(2.5, 2.5)
 limit_bottom = 120
 limit_smoothed = true
 script = ExtResource("47_dxvjp")

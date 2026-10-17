@@ -6,7 +6,9 @@ class_name Player
 # =========================
 
 @onready var animated_sprite: AnimatedSprite2D = $Sprite
-@onready var timerIn: Timer = $TimerInactividad
+@onready var timerIn: Timer = $timInaDead
+@onready var timerIn2: Timer = $timInaAnim
+
 
 @onready var hitbox_normal: CollisionShape2D = $HitboxNormal
 @onready var hitbox_spin: CollisionShape2D = $HitboxSpin
@@ -18,7 +20,7 @@ class_name Player
 # =========================
 
 enum ABILITIES { DOUBLEJUMP, FAST, SPINDASH, CLIMB, STOMP }
-enum State { NORMAL, BRAKING, CHARGING, ROLLING, CLIMBING, STOMPING }
+enum State { NORMAL, BRAKING, CHARGING, ROLLING, CLIMBING, STOMPING, HURT, DEAD}
 
 # =========================
 # CONSTANTES
@@ -42,7 +44,7 @@ const SLOPE_FORCE_RUN = 100.0
 
 const SLOPE_ROLL_DOWN = 600.0
 const SLOPE_ROLL_UP = 250.0
-const MIN_WALL_SPEED = 180.0
+const MIN_WALL_SPEED = 250.0
 
 const BRAKE_DECEL = 560.0
 const STICK_FORCE = 20.0
@@ -50,6 +52,9 @@ const STICK_FORCE = 20.0
 const STEP_HEIGHT = 8.0
 
 const WALL_DRAG = 150.0
+
+const STOMP_ROLL_SPEED = 700.0
+const STOMP_FLAT_THRESHOLD = 0.98
 
 # =========================
 # DATOS Y HABILIDADES
@@ -83,26 +88,55 @@ var smooth_normal := Vector2.UP
 
 var abilities := {
 	ABILITIES.DOUBLEJUMP: true,
-	ABILITIES.FAST: true,
+	ABILITIES.FAST: false,
 	ABILITIES.SPINDASH: true,
 	ABILITIES.CLIMB: false,
 	ABILITIES.STOMP: true
 }
 
 # =========================
+# GESTION DE VIDA/GOLPE
+# =========================
+
+signal player_died
+
+const HURT_KNOCKBACK := Vector2(150.0, -250.0)
+const HURT_MIN_TIME := 0.15          # temps minimum avant de pouvoir se relever
+const HURT_INVULN_TIME := 2.0        # invincibilité après un coup
+const DEATH_BOUNCE := -400.0
+const MAX_SCATTER_RINGS := 20
+
+var is_vulnerable := true
+var invuln_timer := 0.0
+var hurt_timer := 0.0
+
+const RESPAWN_DELAY := 2.0
+const DEATH_Y := 2000.0
+
+var spawn_position := Vector2.ZERO
+var original_collision_mask := 1
+
+# =========================
 # BUCLE PRINCIPAL
 # =========================
 
 func _ready() -> void:
+	DonneesJoueur.empezar_nivel()
+	spawn_position = global_position
+	original_collision_mask = collision_mask
+
 	floor_max_angle = deg_to_rad(60.0)
-	safe_margin = 0.1
-	floor_snap_length = 16.0
+	safe_margin = 0.08
+	floor_snap_length = 2.0
 	floor_stop_on_slope = false
 	floor_constant_speed = false
 	floor_block_on_wall = true
 
-	if not timerIn.timeout.is_connected(_on_timer_timeout):
-		timerIn.timeout.connect(_on_timer_timeout)
+	if not timerIn.timeout.is_connected(_on_timIn_timeout): # Waiting
+		timerIn.timeout.connect(_on_timIn_timeout)
+
+	if not timerIn2.timeout.is_connected(_on_timIn2_timeout):  # Dead for waiting 
+		timerIn2.timeout.connect(_on_timIn2_timeout)
 
 func _physics_process(delta: float) -> void:
 	detach_timer = max(detach_timer - delta, 0.0)
@@ -116,10 +150,17 @@ func _physics_process(delta: float) -> void:
 		State.CHARGING: handle_charging(delta)
 		State.ROLLING:  handle_rolling(delta)
 		State.STOMPING: handle_stomping(delta)
+		State.STOMPING: handle_stomping(delta)
+		State.HURT:     handle_hurting(delta)
+		# No hace falta DEAD porque pos se muere xD
 
 	controlar_timer_inactividad()
 	move_and_slide()
 
+	if global_position.y > DEATH_Y and current_state != State.DEAD: # C murio ! qwq
+		die()
+
+	update_vulnerability(delta) 
 	update_floor_grace(delta)
 	update_sprite_orientation(delta)
 	update_animation()
@@ -146,9 +187,9 @@ func handle_normal(delta: float) -> void:
 			velocity = n * 80.0
 			return
 
-		## Escalón pequeño: si empujas contra una pared, intenta subirla
-		#if is_on_wall() and dir != 0:
-			#try_step_up(dir)
+		# Escalón pequeño: si empujas contra una pared, intenta subirla
+		if is_on_wall() and dir != 0:
+			try_step_up(dir)
 
 		var steep := n.y > -0.7   # pared, techo o curva muy inclinada
 
@@ -161,7 +202,7 @@ func handle_normal(delta: float) -> void:
 		if steep:
 			ground_speed = move_toward(ground_speed, 0.0, WALL_DRAG * delta)
 
-		# Salto ---
+		# Salto
 		if Input.is_action_just_pressed("jump"):
 			velocity = tangent * ground_speed + n * (-JUMP_VELOCITY * salto)
 			es_salto_spin = not Input.is_action_pressed("charge")
@@ -261,11 +302,14 @@ func handle_rolling(delta: float) -> void:
 		var fuerza := SLOPE_ROLL_DOWN
 		if not bajando:
 			fuerza = SLOPE_ROLL_UP * lerpf(0.4, 1.0, plano)
+			if velocity.x == 0 :
+				exit_roll()
+				return
 		roll_speed += tangent.y * fuerza * delta
 
 		velocity = tangent * roll_speed - n * STICK_FORCE
 
-		if n.y > -0.7:
+		if n.y > -0.8:
 			roll_speed = move_toward(roll_speed, 0.0, WALL_DRAG * delta)
 
 		if Input.is_action_just_pressed("jump"):
@@ -285,10 +329,29 @@ func handle_stomping(_delta: float) -> void:
 	velocity.x = 0.0
 	velocity.y = STOMP_VELOCITY
 
-	if is_on_floor():
-		if camara and camara.has_method("apply_shake"):
-			camara.apply_shake()
+	if not is_on_floor():
+		return
+
+	if camara and camara.has_method("apply_shake"):
+		camara.apply_shake()
+
+	var n := get_floor_normal()
+	var flatness := clampf(-n.y, 0.0, 1.0)
+
+	if flatness < STOMP_FLAT_THRESHOLD:
+		enter_stomp_roll(n)
+	else:
+		velocity = Vector2.ZERO
 		exit_stomp()
+	
+func enter_stomp_roll(n: Vector2) -> void:
+	var tangent := Vector2(-n.y, n.x)  
+
+	roll_speed = signf(tangent.y) * STOMP_ROLL_SPEED
+	velocity = tangent * roll_speed
+	facing_direction = signf(roll_speed)
+
+	current_state = State.ROLLING
 
 # =========================
 # TRANSICIONES Y ACCIONES
@@ -364,38 +427,50 @@ func detach_from_surface() -> void:
 	exit_roll()
 
 func esta_invulnerable() -> bool:
-	return current_state == State.ROLLING or current_state == State.STOMPING
+	return current_state == State.ROLLING or current_state == State.STOMPING or current_state == State.CHARGING
 
 func controlar_timer_inactividad() -> void:
 	if dir == 0 and velocity.length() < 25.0 and is_on_floor() and current_state == State.NORMAL:
 		if timerIn.is_stopped():
-			timerIn.start(40.0)
+			timerIn.start(60.0)
+		if timerIn2.is_stopped():
+			timerIn2.start(30.0)
 	else:
 		if not timerIn.is_stopped():
 			timerIn.stop()
+		if not timerIn2.is_stopped():
+			timerIn2.stop();
 
-func _on_timer_timeout() -> void:
+func _on_timIn_timeout() -> void:
 	if OS.has_feature("editor"):
 		get_tree().quit()
+	else: 
+		set_anim("waiting")
 
-#func try_step_up(direction: float) -> void:
-	#if direction == 0.0:
-		#return
-#
-	#var forward := Vector2(sign(direction) * 2.0, 0.0)
-#
-	#var h := 1.0
-	#while h <= STEP_HEIGHT:
-		#var raised := global_transform.translated(Vector2(0, -h))
-		## Libre arriba (no choca al subir) y libre al avanzar desde ahí
-		#if not test_move(global_transform, Vector2(0, -h)) and not test_move(raised, forward):
-			#global_position.y -= h
-			#return
-		#h += 1.0
+func _on_timIn2_timeout() -> void:
+	if OS.has_feature("editor"):
+		get_tree().quit()
+	else: 
+		set_anim("dead")
+
+func try_step_up(direction: float) -> void:
+	if direction == 0.0:
+		return
+
+	var forward := Vector2(sign(direction) * 2.0, 0.0)
+
+	var h := 1.0
+	while h <= STEP_HEIGHT:
+		var raised := global_transform.translated(Vector2(0, -h))
+		# Libre arriba (no choca al subir) y libre al avanzar desde ahí
+		if not test_move(global_transform, Vector2(0, -h)) and not test_move(raised, forward):
+			global_position.y -= h
+			return
+		h += 1.0
 
 func update_floor_grace(delta: float) -> void:
 	if is_on_floor():
-		floor_grace = 0.08
+		floor_grace = 0.1
 		smooth_normal = smooth_normal.lerp(get_floor_normal(), 12.0 * delta).normalized()
 	else:
 		floor_grace = max(floor_grace - delta, 0.0)
@@ -409,7 +484,9 @@ func en_suelo() -> bool:
 # =========================
 
 func alternar_hitbox() -> void:
-	if current_state == State.ROLLING or current_state == State.STOMPING or (not is_on_floor() and es_salto_spin):
+	if current_state == State.DEAD:
+		return
+	if current_state == State.ROLLING or current_state == State.STOMPING or (not is_on_floor() and es_salto_spin) or current_state == State.CHARGING:
 		hitbox_spinning()
 	else:
 		hitbox_normale()
@@ -421,6 +498,110 @@ func hitbox_spinning() -> void:
 func hitbox_normale() -> void:
 	hitbox_normal.set_deferred("disabled", false)
 	hitbox_spin.set_deferred("disabled", true)
+
+# =========================
+# VULNERABILIDAD
+# =========================
+
+func update_vulnerability(delta: float) -> void:
+	invuln_timer = max(invuln_timer - delta, 0.0)
+
+	# Vulnérable seulement en NORMAL / BRAKING et hors invincibilité post-coup
+	is_vulnerable = (current_state == State.NORMAL or current_state == State.BRAKING) \
+		and invuln_timer <= 0.0
+
+	if invuln_timer > 0.0:
+		animated_sprite.visible = int(invuln_timer * 20.0) % 2 == 0
+	else:
+		animated_sprite.visible = true
+
+func get_hit(valeur: int = 1, source_position: Vector2 = Vector2.ZERO) -> void:
+	if not is_vulnerable:
+		return
+
+	if DonneesJoueur.rings_nivel > 0:
+		var lost := DonneesJoueur.quitar_rings_nivel(valeur)
+		scatter_rings(lost)
+		enter_hurt(source_position)
+	else:
+		die()
+
+func enter_hurt(source_position: Vector2) -> void:
+	current_state = State.HURT
+	hurt_timer = HURT_MIN_TIME
+	invuln_timer = HURT_INVULN_TIME
+	is_vulnerable = false
+	es_salto_spin = false
+	roll_speed = 0.0
+	charge_time = 0.0
+
+	# Recul à l'opposé de la source du coup
+	var push_dir := -facing_direction
+	if source_position != Vector2.ZERO:
+		push_dir = signf(global_position.x - source_position.x)
+		if push_dir == 0.0:
+			push_dir = -facing_direction
+	velocity = Vector2(HURT_KNOCKBACK.x * push_dir, HURT_KNOCKBACK.y)
+	up_direction = Vector2.UP
+
+func handle_hurting(delta: float) -> void:
+	hurt_timer -= delta
+	if hurt_timer <= 0.0 and is_on_floor():
+		velocity.x = 0.0
+		current_state = State.NORMAL
+
+func die() -> void:
+	if current_state == State.DEAD:
+		return
+
+	current_state = State.DEAD
+	is_vulnerable = false
+	DonneesJoueur.change_vidas(-1)
+	player_died.emit()
+
+	velocity = Vector2(0.0, DEATH_BOUNCE)
+	hitbox_normal.set_deferred("disabled", true)
+	hitbox_spin.set_deferred("disabled", true)
+	set_deferred("collision_mask", 0)
+
+	await get_tree().create_timer(RESPAWN_DELAY).timeout
+
+	if DonneesJoueur.vidasP > 0:
+		respawn()
+	else:
+		game_over()
+
+func respawn() -> void:
+	collision_mask = original_collision_mask
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	reset_physics_interpolation()
+
+	DonneesJoueur.perder_rings_nivel()
+
+	current_state = State.NORMAL
+	invuln_timer = HURT_INVULN_TIME
+	up_direction = Vector2.UP
+	smooth_normal = Vector2.UP
+	animated_sprite.rotation = 0.0
+	es_salto_spin = false
+	roll_speed = 0.0
+	charge_time = 0.0
+	detach_timer = 0.0
+	floor_grace = 0.0
+
+	if camara:
+		camara.reset_smoothing()
+
+func game_over() -> void:
+	DonneesJoueur.reiniciar_vidas()
+	DonneesJoueur.empezar_nivel()   # rings del nivel a 0
+	get_tree().change_scene_to_file("res://scenes/game_over.tscn")
+
+func scatter_rings(amount: int) -> void: # A IMPLEMENTAR
+	#if ring_scene == null:
+		return
+	
 
 # =========================
 # ANIMACIONES
@@ -439,14 +620,20 @@ func update_sprite_orientation(delta: float) -> void:
 			target_rotation = ang
 
 	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_rotation, 12.0 * delta)
+	hitbox_normal.rotation = animated_sprite.rotation
 
-	if current_state == State.BRAKING:
+	if current_state == State.BRAKING or current_state == State.HURT:
 		pass
 	elif dir > 0:
 		facing_direction = 1.0
 	elif dir < 0:
 		facing_direction = -1.0
 	animated_sprite.flip_h = facing_direction < 0
+
+	if facing_direction < 0:
+		hitbox_normal.position.x = -abs(hitbox_normal.position.x)
+	else:
+		hitbox_normal.position.x = abs(hitbox_normal.position.x)
 
 func update_animation() -> void:
 	match current_state:
@@ -457,6 +644,12 @@ func update_animation() -> void:
 			return
 		State.STOMPING, State.ROLLING:
 			set_anim("spin")
+			return
+		State.HURT:
+			set_anim("hurt")
+			return
+		State.DEAD:
+			set_anim("dead")
 			return
 
 	var speed := velocity.length()

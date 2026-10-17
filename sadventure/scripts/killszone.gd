@@ -9,16 +9,12 @@ func _ready() -> void:
 	if not body_entered.is_connected(_on_body_entered):
 		body_entered.connect(_on_body_entered)
 
-func _on_body_entered(body: Node2D) -> void:
+func _on_body_entered(body: Node) -> void:
 	if body is Player:
-		get_tree().call_deferred("reload_current_scene")
-
-
-# if body is Player:
-#		body.perder_vida()
-
-#		if body.num_vidas > 0:
-#			recolocar_jugador(body)
+		if body.esta_invulnerable() and body.is_vulnerable == false and body.invuln_timer <= 0.0:
+			queue_free()   # le joueur attaque (roll/stomp) → l'ennemi meurt
+		else:
+			body.get_hit(1, global_position)
 
 func recolocar_jugador(player: Player) -> void:
 	player.velocity = Vector2.ZERO
