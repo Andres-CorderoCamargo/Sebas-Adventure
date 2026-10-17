@@ -1,0 +1,10 @@
+[gd_resource type="LabelSettings" format=3 uid="uid://dot0bl7241r2w"]
+
+[ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="1_gexn3"]
+
+[resource]
+font = ExtResource("1_gexn3")
+font_size = 20
+font_color = Color(0.7647059, 0.3529412, 0, 1)
+outline_size = 12
+outline_color = Color(0, 0, 0, 1)
