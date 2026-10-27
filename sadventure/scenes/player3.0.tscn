@@ -317,7 +317,7 @@ metadata/_custom_type_script = "uid://bambb440g2ker"
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
-animation = &"charging"
+animation = &"crouch"
 autoplay = "idle"
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
