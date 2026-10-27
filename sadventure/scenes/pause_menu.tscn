@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://o52cgyp0op8w"]
 
-[ext_resource type="Script" uid="uid://dy0es0sudu1mi" path="res://scenes/pause_menu.gd" id="1_myx47"]
+[ext_resource type="Script" uid="uid://dy0es0sudu1mi" path="res://scripts/pause_menu.gd" id="1_myx47"]
 [ext_resource type="FontFile" uid="uid://buwtujwkqgy61" path="res://Assets/ressources/Pixeled.ttf" id="1_n87rw"]
 [ext_resource type="StyleBox" uid="uid://cdi7ay8ksfnvt" path="res://effetsButton/continue_pause.tres" id="3_5d2l8"]
 [ext_resource type="StyleBox" uid="uid://ddb54l3o1krx7" path="res://effetsButton/pause_hover.tres" id="4_7l7mv"]
@@ -53,6 +53,25 @@ theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = ExtResource("3_5d2l8")
 theme_override_styles/hover = ExtResource("4_7l7mv")
 text = "CONTINUE"
+
+[node name="options" type="Button" parent="menu" unique_id=906281313]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_n87rw")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("3_5d2l8")
+theme_override_styles/hover = ExtResource("4_7l7mv")
+text = "OPTIONS"
+
+[node name="tienda" type="Button" parent="menu" unique_id=1334209994]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("1_n87rw")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("3_5d2l8")
+theme_override_styles/hover = ExtResource("4_7l7mv")
+text = "SHOP
+"
 
 [node name="salir" type="Button" parent="menu" unique_id=256102158]
 layout_mode = 2
