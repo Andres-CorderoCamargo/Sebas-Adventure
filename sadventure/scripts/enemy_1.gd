@@ -24,6 +24,7 @@ func _physics_process(delta):
 func _on_area_body_entered(body: Node2D) -> void:
 	if body is Player:
 		if body.esta_invulnerable():
+			body.get_boost(1.3)
 			emit_signal("enemyDestroyed")
 			print("I'm dead")
 			queue_free()
