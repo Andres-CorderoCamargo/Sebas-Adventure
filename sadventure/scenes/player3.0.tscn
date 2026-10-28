@@ -81,6 +81,11 @@ animations = [{
 "name": &"charging",
 "speed": 12.0
 }, {
+"frames": [],
+"loop": 1,
+"name": &"climb",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("10_c5epk")
@@ -317,7 +322,7 @@ metadata/_custom_type_script = "uid://bambb440g2ker"
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
-animation = &"crouch"
+animation = &"climb"
 autoplay = "idle"
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]

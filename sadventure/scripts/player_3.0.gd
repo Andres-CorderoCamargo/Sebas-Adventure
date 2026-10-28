@@ -59,6 +59,9 @@ const FLAT_THRESHOLD = 0.98
 
 const DEBUG := false # Para poder ver errores con la linea magica de _physics_process
 
+const CLIMB_SPEED = 120.0
+const CLIMB_WALL_JUMP = Vector2(250.0, -300.0)
+
 # =========================
 # DATOS Y HABILIDADES
 # =========================
@@ -68,6 +71,9 @@ var es_salto_spin := true
 var can_double_jump := false
 
 var salto := 1.0
+
+var climb_dir := 0.0   # lado de la pared: 1 = pared a la derecha, -1 = a la izquierda
+var wall_jump_lock := 0.0
 
 # =========================
 # VARIABLES DE ESTADO Y FÍSICAS
@@ -96,7 +102,7 @@ var abilities := {
 	ABILITIES.DOUBLEJUMP: true,
 	ABILITIES.FAST: true,
 	ABILITIES.SPINDASH: true,
-	ABILITIES.CLIMB: false,
+	ABILITIES.CLIMB: true,
 	ABILITIES.STOMP: true
 }
 
@@ -145,6 +151,7 @@ func _ready() -> void:
 		timerIn2.timeout.connect(_on_timIn2_timeout)
 
 func _physics_process(delta: float) -> void:
+	wall_jump_lock = max(wall_jump_lock - delta, 0.0)
 	detach_timer = max(detach_timer - delta, 0.0)
 	dir = Input.get_axis("ui_left", "ui_right")
 	update_up_direction()
@@ -156,6 +163,7 @@ func _physics_process(delta: float) -> void:
 		State.CHARGING: handle_charging(delta)
 		State.ROLLING:  handle_rolling(delta)
 		State.STOMPING: handle_stomping(delta)
+		State.CLIMBING: handle_climbing(delta)
 		State.HURT:     handle_hurting(delta)
 		# No hace falta DEAD porque pos se muere xD
 
@@ -279,7 +287,13 @@ func handle_normal(delta: float) -> void:
 			enter_stomp()
 			return
 
-		if dir != 0:
+		if can_grab_wall():
+			enter_climb(sign(dir))
+			return
+
+		if wall_jump_lock > 0.0:
+			pass
+		elif dir != 0:
 			var speed_modifier = 1.5 if has_abilities(ABILITIES.FAST) else 1.0
 			velocity.x = move_toward(velocity.x, dir * MAX_SPEED * speed_modifier, ACCEL_AIR * delta)
 		else:
@@ -322,22 +336,22 @@ func handle_rolling(delta: float) -> void:
 		roll_airborne = true
 		es_salto_spin = true
 
-		# Doble salto
 		if Input.is_action_just_pressed("jump") and can_double_jump:
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
 
-		# Stomp
 		if Input.is_action_just_pressed("charge") and has_abilities(ABILITIES.STOMP):
 			enter_stomp()
 			return
 
-		# Control aéreo
+		if can_grab_wall():
+			enter_climb(sign(dir))
+			return
+
 		var speed_modifier := 1.5 if has_abilities(ABILITIES.FAST) else 1.0
-		if dir != 0:
+		if dir != 0 and wall_jump_lock <= 0.0:
 			velocity.x = move_toward(velocity.x, dir * MAX_SPEED * speed_modifier, ACCEL_AIR * delta)
 
-		# Guardamos la velocidad al final, para que incluya los cambios de arriba
 		pre_land_velocity = velocity
 		return
 
@@ -428,7 +442,35 @@ func handle_stomping(_delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 		exit_stomp()
-	
+
+func handle_climbing(_delta: float) -> void:
+	var vertical := Input.get_axis("ui_up", "ui_down")
+
+	velocity.x = climb_dir * 20.0
+	velocity.y = vertical * CLIMB_SPEED
+
+	if Input.is_action_just_pressed("jump"):
+		velocity = Vector2(-climb_dir * CLIMB_WALL_JUMP.x, CLIMB_WALL_JUMP.y)
+		es_salto_spin = true
+		detach_timer = 0.2
+		wall_jump_lock = 0.15
+		exit_climb()
+		return
+
+	if is_on_floor() and vertical > 0.0:
+		exit_climb()
+		return
+
+	if dir == 0.0 or sign(dir) != climb_dir:
+		detach_timer = 0.1
+		exit_climb()
+		return
+
+	if not is_on_wall():
+		velocity = Vector2(climb_dir * 120.0, -150.0)
+		detach_timer = 0.1
+		exit_climb()
+
 func enter_stomp_roll(n: Vector2) -> void:
 	var tangent := Vector2(-n.y, n.x)  
 
@@ -480,6 +522,20 @@ func enter_stomp() -> void:
 func exit_stomp() -> void:
 	current_state = State.NORMAL
 
+func enter_climb(wall_side: float) -> void:
+	current_state = State.CLIMBING
+	climb_dir = wall_side
+	facing_direction = wall_side
+	velocity = Vector2(wall_side * 20.0, 0.0)
+	es_salto_spin = false
+	roll_airborne = false
+	roll_speed = 0.0
+	can_double_jump = has_abilities(ABILITIES.DOUBLEJUMP)
+
+func exit_climb() -> void:
+	current_state = State.NORMAL
+	climb_dir = 0.0
+
 # =========================
 # UTILIDADES Y SISTEMAS
 # =========================
@@ -508,6 +564,9 @@ func update_up_direction() -> void:
 		up_direction = Vector2.UP
 
 func apply_gravity(delta: float) -> void:
+	if current_state == State.CLIMBING:
+		return
+
 	var pegado := detach_timer <= 0.0 and is_on_floor() and (current_state == State.NORMAL or current_state == State.ROLLING or current_state == State.BRAKING)
 	if pegado:
 		return
@@ -520,6 +579,28 @@ func detach_from_surface() -> void:
 func esta_invulnerable() -> bool:
 	return current_state == State.ROLLING or current_state == State.STOMPING \
 		or current_state == State.CHARGING or (es_salto_spin and not is_on_floor())
+
+func can_grab_wall() -> bool:
+	return has_abilities(ABILITIES.CLIMB) \
+		and detach_timer <= 0.0 \
+		and wall_jump_lock <= 0.0 \
+		and is_on_wall() \
+		and dir != 0 \
+		and sign(dir) == -sign(get_wall_normal().x)
+
+func get_boost(fuerza: float = 1.0) -> void:
+	var fuerza_final = fuerza * (1.4 if Input.is_action_pressed("jump") else 1.0)
+	velocity.y = JUMP_VELOCITY * fuerza_final
+
+	es_salto_spin = true
+	can_double_jump = has_abilities(ABILITIES.DOUBLEJUMP)
+
+	detach_timer = 0.1
+	up_direction = Vector2.UP
+
+	if current_state == State.STOMPING or current_state == State.CHARGING or current_state == State.CLIMBING:
+		current_state = State.NORMAL
+		climb_dir = 0.0
 
 func controlar_timer_inactividad() -> void:
 	if dir == 0 and velocity.length() < 25.0 and is_on_floor() and current_state == State.NORMAL:
@@ -600,7 +681,7 @@ func update_vulnerability(delta: float) -> void:
 
 	var saltando_spin := es_salto_spin and not is_on_floor()
 
-	is_vulnerable = (current_state == State.NORMAL or current_state == State.BRAKING) \
+	is_vulnerable = (current_state == State.NORMAL or current_state == State.BRAKING or current_state == State.CLIMBING) \
 		and not saltando_spin \
 		and invuln_timer <= 0.0
 
@@ -706,7 +787,8 @@ func update_sprite_orientation(delta: float) -> void:
 
 	var girando := current_state == State.ROLLING \
 		or current_state == State.STOMPING \
-		or current_state == State.CHARGING
+		or current_state == State.CHARGING \
+		or current_state == State.CLIMBING
 
 	if en_suelo() and not girando:
 		var ang := smooth_normal.angle() + PI / 2.0
@@ -716,7 +798,7 @@ func update_sprite_orientation(delta: float) -> void:
 	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_rotation, 12.0 * delta)
 	hitbox_normal.rotation = animated_sprite.rotation
 
-	if current_state == State.BRAKING or current_state == State.HURT or current_state == State.ROLLING:
+	if current_state == State.BRAKING or current_state == State.HURT or current_state == State.ROLLING or current_state == State.CLIMBING:
 		pass
 	elif dir > 0:
 		facing_direction = 1.0
@@ -731,6 +813,9 @@ func update_sprite_orientation(delta: float) -> void:
 
 func update_animation() -> void:
 	match current_state:
+		State.CLIMBING:
+			set_anim("climb")
+			return
 		State.BRAKING:
 			return
 		State.CHARGING:
