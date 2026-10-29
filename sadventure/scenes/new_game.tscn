@@ -5,6 +5,14 @@
 [ext_resource type="StyleBox" uid="uid://tqauvrr2m0yu" path="res://effetsButton/buttoonData1.tres" id="3_cwj52"]
 [ext_resource type="StyleBox" uid="uid://hm21jq0w8t0d" path="res://effetsButton/buttonDataClick.tres" id="4_s1qwq"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dc0si"]
+bg_color = Color(0.14767182, 0.14767182, 0.14767176, 1)
+border_width_left = 20
+border_width_top = 20
+border_width_right = 20
+border_width_bottom = 20
+border_color = Color(0.27450982, 0.92941177, 0, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s4omt"]
 bg_color = Color(0, 0.23137255, 0.7254902, 1)
 border_width_left = 31
@@ -26,6 +34,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6hhwf")
+
+[node name="Panel" type="Panel" parent="." unique_id=852101735]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dc0si")
 
 [node name="vbox" type="VBoxContainer" parent="." unique_id=866260173]
 layout_mode = 1
@@ -69,7 +86,7 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_l8kns")
 theme_override_font_sizes/font_size = 16
 placeholder_text = " Sebas"
-max_length = 8
+max_length = 10
 
 [node name="startB" type="Button" parent="vbox" unique_id=1084258610]
 layout_mode = 2
