@@ -57,7 +57,7 @@ const STOMP_ROLL_SPEED = 700.0
 
 const FLAT_THRESHOLD = 0.98
 
-const DEBUG := false # Para poder ver errores con la linea magica de _physics_process
+const DEBUG := true # Para poder ver errores con la linea magica de _physics_process
 
 const CLIMB_SPEED = 120.0
 const CLIMB_WALL_JUMP = Vector2(250.0, -300.0)
@@ -87,6 +87,8 @@ var facing_direction := 1.0
 
 var charge_time := 0.0
 var roll_speed := 0.0
+var run_speed := 0.0
+var run_grounded := false
 
 var detach_timer := 0.0
 
@@ -167,6 +169,8 @@ func _physics_process(delta: float) -> void:
 		State.HURT:     handle_hurting(delta)
 		# No hace falta DEAD porque pos se muere xD
 
+	if current_state != State.NORMAL:
+		run_grounded = false
 	controlar_timer_inactividad()
 
 	if current_state == State.ROLLING:
@@ -177,7 +181,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			floor_snap_length = clampf(abs(roll_speed) * delta * 1.5, 2.0, 16.0)
 	else:
-		floor_snap_length = 2.0
+		floor_snap_length = clampf(velocity.length() * delta * 1.5, 2.0, 16.0)
 
 	move_and_slide()
 
@@ -211,31 +215,39 @@ func handle_normal(delta: float) -> void:
 				return
 
 		var tangent := Vector2(-n.y, n.x)
-		var ground_speed := velocity.dot(tangent)
+		var ground_speed := run_speed if run_grounded else velocity.dot(tangent)
+		run_grounded = true
 
-		# Superficie muy empinada y poca velocidad: te despegas y caes
-		if n.y > -0.7 and abs(ground_speed) < MIN_WALL_SPEED:
+		var subiendo := ground_speed * tangent.y < 0.0 or (dir != 0 and dir * tangent.y < 0.0)
+
+		if DEBUG:
+			print("NORMAL suelo n=", n.snapped(Vector2(0.01, 0.01)), " gs=", snappedf(ground_speed, 0.1), " dir=", dir, " subiendo=", subiendo)
+
+		# Superficie muy empinada, subiendo y con poca velocidad: te despegas
+		if n.y > -0.7 and subiendo and abs(ground_speed) < MIN_WALL_SPEED:
+			run_grounded = false
 			detach_timer = 0.2
 			velocity = n * 80.0
 			return
 
-		# Escalón pequeño: si empujas contra una pared, intenta subirla
-		if is_on_wall() and dir != 0:
+		# Escalón pequeño
+		if is_on_wall() and dir != 0 and absf(get_wall_normal().y) < 0.1:
 			try_step_up(dir)
 
-		var steep := n.y > -0.7   # pared, techo o curva muy inclinada
+		var steep := n.y > -0.7
 
 		var slope_force := tangent.y * SLOPE_FORCE_RUN
 		if dir != 0:
 			slope_force *= 0.15
 		ground_speed += slope_force * delta
 
-		# En superficies empinadas siempre pierdes velocidad
-		if steep:
+		# En superficies empinadas pierdes velocidad solo al subir
+		if steep and ground_speed * tangent.y < 0.0:
 			ground_speed = move_toward(ground_speed, 0.0, WALL_DRAG * delta)
 
 		# Salto
 		if Input.is_action_just_pressed("jump"):
+			run_grounded = false
 			velocity = tangent * ground_speed + n * (-JUMP_VELOCITY * salto)
 			es_salto_spin = not Input.is_action_pressed("charge")
 			if es_salto_spin:
@@ -248,18 +260,20 @@ func handle_normal(delta: float) -> void:
 		# Agacharse / rodar
 		if Input.is_action_pressed("ui_down"):
 			if abs(ground_speed) > MIN_ROLL_SPEED:
+				run_grounded = false
 				roll_speed = ground_speed
 				velocity = tangent * roll_speed
 				current_state = State.ROLLING
 				return
 			else:
 				ground_speed = move_toward(ground_speed, 0.0, DECEL * delta)
+				run_speed = ground_speed
 				velocity = tangent * ground_speed - n * STICK_FORCE
 				if Input.is_action_just_pressed("charge") and has_abilities(ABILITIES.SPINDASH):
 					enter_charge()
 				return
 
-		# Frenar (antes de acelerar)
+		# Frenar
 		if dir != 0 and sign(dir) != sign(ground_speed) and abs(ground_speed) > MAX_SPEED * 0.6:
 			velocity = tangent * ground_speed - n * STICK_FORCE
 			current_state = State.BRAKING
@@ -274,10 +288,13 @@ func handle_normal(delta: float) -> void:
 			var decel := DECEL * clampf(-n.y, 0.0, 1.0)
 			ground_speed = move_toward(ground_speed, 0.0, decel * delta)
 
+		run_speed = ground_speed
 		velocity = tangent * ground_speed - n * STICK_FORCE
 
 	else:
 		# En el aire
+		run_grounded = false
+
 		if Input.is_action_just_pressed("jump") and can_double_jump and detach_timer <= 0.0:
 			velocity.y = JUMP_VELOCITY
 			can_double_jump = false
@@ -342,10 +359,6 @@ func handle_rolling(delta: float) -> void:
 
 		if Input.is_action_just_pressed("charge") and has_abilities(ABILITIES.STOMP):
 			enter_stomp()
-			return
-
-		if can_grab_wall():
-			enter_climb(sign(dir))
 			return
 
 		var speed_modifier := 1.5 if has_abilities(ABILITIES.FAST) else 1.0
@@ -581,12 +594,21 @@ func esta_invulnerable() -> bool:
 		or current_state == State.CHARGING or (es_salto_spin and not is_on_floor())
 
 func can_grab_wall() -> bool:
-	return has_abilities(ABILITIES.CLIMB) \
-		and detach_timer <= 0.0 \
-		and wall_jump_lock <= 0.0 \
-		and is_on_wall() \
-		and dir != 0 \
-		and sign(dir) == -sign(get_wall_normal().x)
+	if not (has_abilities(ABILITIES.CLIMB) and detach_timer <= 0.0 and wall_jump_lock <= 0.0 \
+			and is_on_wall() and dir != 0):
+		return false
+
+	var wn := get_wall_normal()
+
+	# Solo paredes casi verticales (no rampas empinadas)
+	if absf(wn.y) > 0.1:
+		return false
+
+	# No agarrar si rodando por una rampa
+	if en_suelo():
+		return false
+
+	return sign(dir) == -sign(wn.x)
 
 func get_boost(fuerza: float = 1.0) -> void:
 	var fuerza_final = fuerza * (1.4 if Input.is_action_pressed("jump") else 1.0)
