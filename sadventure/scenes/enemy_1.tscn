@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cxsr50a2bvrqc"]
 
 [ext_resource type="Script" uid="uid://d4jm02vukkhwy" path="res://scripts/enemy_1.gd" id="1_tcmaw"]
-[ext_resource type="Texture2D" uid="uid://brnm23vq0oh0e" path="res://brackeys_platformer_assets/sprites/sprite.png" id="2_a1412"]
+[ext_resource type="Texture2D" uid="uid://brnm23vq0oh0e" path="res://Assets/ressources/sprite.png" id="2_a1412"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_31v88"]
 size = Vector2(18, 1)
