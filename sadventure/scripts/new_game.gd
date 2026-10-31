@@ -39,4 +39,4 @@ func sanitize_name(player_name: String) -> String:
 
 func _on_start_b_pressed() -> void:
 	apply_name(nameP.text) 
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	get_tree().change_scene_to_file("res://scenes/tutorial.tscn")

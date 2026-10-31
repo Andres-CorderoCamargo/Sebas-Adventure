@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://brnm23vq0oh0e"
-path="res://.godot/imported/sprite.png-59fe32433fed149e2a00ec273ad13884.ctex"
+uid="uid://beorsc8mvpbe"
+path="res://.godot/imported/spr_SlopeSI1_1.png-db136daa8a0a89ed7064e74e905bff8c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://brackeys_platformer_assets/sprites/sprite.png"
-dest_files=["res://.godot/imported/sprite.png-59fe32433fed149e2a00ec273ad13884.ctex"]
+source_file="res://Assets/FloorA/spr_SlopeSI1_1.png"
+dest_files=["res://.godot/imported/spr_SlopeSI1_1.png-db136daa8a0a89ed7064e74e905bff8c.ctex"]
 
 [params]
 

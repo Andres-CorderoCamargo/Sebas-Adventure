@@ -361,6 +361,10 @@ func handle_rolling(delta: float) -> void:
 			enter_stomp()
 			return
 
+		if can_grab_wall():
+			enter_climb(sign(dir))
+			return
+
 		var speed_modifier := 1.5 if has_abilities(ABILITIES.FAST) else 1.0
 		if dir != 0 and wall_jump_lock <= 0.0:
 			velocity.x = move_toward(velocity.x, dir * MAX_SPEED * speed_modifier, ACCEL_AIR * delta)
@@ -594,6 +598,8 @@ func esta_invulnerable() -> bool:
 		or current_state == State.CHARGING or (es_salto_spin and not is_on_floor())
 
 func can_grab_wall() -> bool:
+	if DEBUG:
+		print("grab? wall=", is_on_wall(), " dir=", dir, " wn=", get_wall_normal(), " detach=", detach_timer, " lock=", wall_jump_lock)
 	if not (has_abilities(ABILITIES.CLIMB) and detach_timer <= 0.0 and wall_jump_lock <= 0.0 \
 			and is_on_wall() and dir != 0):
 		return false
@@ -601,11 +607,7 @@ func can_grab_wall() -> bool:
 	var wn := get_wall_normal()
 
 	# Solo paredes casi verticales (no rampas empinadas)
-	if absf(wn.y) > 0.1:
-		return false
-
-	# No agarrar si rodando por una rampa
-	if en_suelo():
+	if absf(wn.y) > 0.25:
 		return false
 
 	return sign(dir) == -sign(wn.x)
