@@ -161,6 +161,44 @@ animations = [{
 "name": &"hurt",
 "speed": 5.0
 }, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_p0674")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_hif46")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_rxtb6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_n0t0l")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_q4jui")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_wlr63")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_lngbs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_xuvmo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_rmtvd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_4fibd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_3y1qi")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
 "frames": [],
 "loop": 1,
 "name": &"jump",
@@ -200,44 +238,6 @@ animations = [{
 "loop": 1,
 "name": &"run",
 "speed": 10.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("2_p0674")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_hif46")
-}, {
-"duration": 1.0,
-"texture": ExtResource("4_rxtb6")
-}, {
-"duration": 1.0,
-"texture": ExtResource("5_n0t0l")
-}, {
-"duration": 1.0,
-"texture": ExtResource("6_q4jui")
-}, {
-"duration": 1.0,
-"texture": ExtResource("7_wlr63")
-}, {
-"duration": 1.0,
-"texture": ExtResource("8_lngbs")
-}, {
-"duration": 1.0,
-"texture": ExtResource("9_xuvmo")
-}, {
-"duration": 1.0,
-"texture": ExtResource("10_rmtvd")
-}, {
-"duration": 1.0,
-"texture": ExtResource("11_4fibd")
-}, {
-"duration": 1.0,
-"texture": ExtResource("12_3y1qi")
-}],
-"loop": 1,
-"name": &"s",
-"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -327,8 +327,8 @@ metadata/_custom_type_script = "uid://bambb440g2ker"
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=965741846]
 sprite_frames = SubResource("SpriteFrames_0nbmm")
-animation = &"s"
-autoplay = "s"
+animation = &"idle"
+autoplay = "idle"
 
 [node name="HitboxNormal" type="CollisionShape2D" parent="." unique_id=1872683168]
 visibility_layer = 3
