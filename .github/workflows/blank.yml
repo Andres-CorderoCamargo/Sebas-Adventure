@@ -3,11 +3,12 @@ name: Sincronizar con Repositorio B
 on:
   push:
     branches:
-      - '*'
+      - main
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
       - name: Descargar código de A
         uses: actions/checkout@v4
@@ -16,6 +17,7 @@ jobs:
 
       - name: Enviar cambios a B
         env:
-          TOKEN: ${{ secrets.DEST_REPO_TOKEN }}
+          TOKEN: ${{ secrets.REPO_B_TOKEN }}
         run: |
-          git push --force https://${TOKEN}@://github.com HEAD:main
+          git remote add destination https://x-access-token:${TOKEN}@github.com/AwildSebitas/TestAdventure.git
+          git push --force destination HEAD:main
