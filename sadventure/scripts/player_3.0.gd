@@ -20,7 +20,7 @@ class_name Player
 # =========================
 
 enum ABILITIES { DOUBLEJUMP, FAST, SPINDASH, CLIMB, STOMP }
-enum State { NORMAL, BRAKING, CHARGING, ROLLING, CLIMBING, STOMPING, HURT, DEAD}
+enum State { NORMAL, BRAKING, CHARGING, ROLLING, CLIMBING, STOMPING,DODGING, HURT, DEAD}
 
 # =========================
 # CONSTANTES
@@ -57,10 +57,14 @@ const STOMP_ROLL_SPEED = 700.0
 
 const FLAT_THRESHOLD = 0.98
 
-const DEBUG := true # Para poder ver errores con la linea magica de _physics_process
+const DEBUG := false # Para poder ver errores con la linea magica de _physics_process
 
 const CLIMB_SPEED = 120.0
 const CLIMB_WALL_JUMP = Vector2(250.0, -300.0)
+
+const DODGE_SPEED = 450.0
+const DODGE_TIME = 0.25
+const DODGE_COOLDOWN = 0.6
 
 # =========================
 # DATOS Y HABILIDADES
@@ -107,6 +111,11 @@ var abilities := {
 	ABILITIES.CLIMB: true,
 	ABILITIES.STOMP: true
 }
+
+var dodge_timer := 0.0
+var dodge_cooldown := 0.0
+var dodge_dir := 1.0
+var air_dodge_used := false 
 
 # =========================
 # GESTION DE VIDA/GOLPE
@@ -155,6 +164,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	wall_jump_lock = max(wall_jump_lock - delta, 0.0)
 	detach_timer = max(detach_timer - delta, 0.0)
+	dodge_cooldown = max(dodge_cooldown - delta, 0.0)
 	dir = Input.get_axis("ui_left", "ui_right")
 	update_up_direction()
 	apply_gravity(delta)
@@ -166,6 +176,7 @@ func _physics_process(delta: float) -> void:
 		State.ROLLING:  handle_rolling(delta)
 		State.STOMPING: handle_stomping(delta)
 		State.CLIMBING: handle_climbing(delta)
+		State.DODGING: handle_dodging(delta)
 		State.HURT:     handle_hurting(delta)
 		# No hace falta DEAD porque pos se muere xD
 
@@ -200,9 +211,13 @@ func _physics_process(delta: float) -> void:
 # =========================
 
 func handle_normal(delta: float) -> void:
+	if try_dodge():
+		return
+
 	if is_on_floor() and detach_timer <= 0.0:
 		var venia_en_spin := es_salto_spin
 		es_salto_spin = false
+		air_dodge_used = false
 		if has_abilities(ABILITIES.DOUBLEJUMP):
 			can_double_jump = true
 
@@ -350,6 +365,9 @@ func handle_charging(delta: float) -> void:
 func handle_rolling(delta: float) -> void:
 	# En el aire
 	if not is_on_floor():
+		if try_dodge():
+			return
+
 		roll_airborne = true
 		es_salto_spin = true
 
@@ -488,6 +506,24 @@ func handle_climbing(_delta: float) -> void:
 		detach_timer = 0.1
 		exit_climb()
 
+func handle_dodging(delta: float) -> void:
+	dodge_timer -= delta
+
+	if is_on_floor():
+		var n := get_floor_normal()
+		var tangent := Vector2(-n.y, n.x)
+		velocity = tangent * (dodge_dir * DODGE_SPEED) - n * STICK_FORCE
+	else:
+		velocity.x = dodge_dir * DODGE_SPEED
+		velocity.y = 0.0
+
+	if is_on_wall() and absf(get_wall_normal().y) < 0.25 and sign(get_wall_normal().x) == -sign(dodge_dir):
+		exit_dodge()
+		return
+
+	if dodge_timer <= 0.0:
+		exit_dodge()
+
 func enter_stomp_roll(n: Vector2) -> void:
 	var tangent := Vector2(-n.y, n.x)  
 
@@ -498,7 +534,14 @@ func enter_stomp_roll(n: Vector2) -> void:
 
 	current_state = State.ROLLING
 
-	roll_airborne = false	
+	roll_airborne = false
+
+func try_dodge() -> bool:
+	if Input.is_action_just_pressed("dodge") and dodge_cooldown <= 0.0 \
+			and (is_on_floor() or not air_dodge_used):
+		enter_dodge()
+		return true
+	return false
 
 # =========================
 # TRANSICIONES Y ACCIONES
@@ -552,6 +595,25 @@ func enter_climb(wall_side: float) -> void:
 func exit_climb() -> void:
 	current_state = State.NORMAL
 	climb_dir = 0.0
+
+func enter_dodge() -> void:
+	current_state = State.DODGING
+	dodge_timer = DODGE_TIME
+	dodge_cooldown = DODGE_COOLDOWN
+	dodge_dir = dir if dir != 0.0 else facing_direction
+	facing_direction = dodge_dir
+	es_salto_spin = false
+	run_grounded = false
+	roll_airborne = false
+	if not is_on_floor():
+		air_dodge_used = true
+
+
+
+func exit_dodge() -> void:
+	current_state = State.NORMAL
+	var mod := 1.5 if has_abilities(ABILITIES.FAST) else 1.0
+	velocity = velocity.limit_length(MAX_SPEED * mod)
 
 # =========================
 # UTILIDADES Y SISTEMAS
@@ -618,6 +680,7 @@ func get_boost(fuerza: float = 1.0) -> void:
 
 	es_salto_spin = true
 	can_double_jump = has_abilities(ABILITIES.DOUBLEJUMP)
+	air_dodge_used = false
 
 	detach_timer = 0.1
 	up_direction = Vector2.UP
@@ -683,7 +746,7 @@ func en_suelo() -> bool:
 func alternar_hitbox() -> void:
 	if current_state == State.DEAD:
 		return
-	if current_state == State.ROLLING or current_state == State.STOMPING or (not is_on_floor() and es_salto_spin) or current_state == State.CHARGING:
+	if current_state == State.ROLLING or current_state == State.STOMPING or (not is_on_floor() and es_salto_spin) or current_state == State.CHARGING or current_state == State.DODGING:
 		hitbox_spinning()
 	else:
 		hitbox_normale()
@@ -812,7 +875,8 @@ func update_sprite_orientation(delta: float) -> void:
 	var girando := current_state == State.ROLLING \
 		or current_state == State.STOMPING \
 		or current_state == State.CHARGING \
-		or current_state == State.CLIMBING
+		or current_state == State.CLIMBING \
+		or current_state == State.DODGING
 
 	if en_suelo() and not girando:
 		var ang := smooth_normal.angle() + PI / 2.0
@@ -822,7 +886,7 @@ func update_sprite_orientation(delta: float) -> void:
 	animated_sprite.rotation = lerp_angle(animated_sprite.rotation, target_rotation, 12.0 * delta)
 	hitbox_normal.rotation = animated_sprite.rotation
 
-	if current_state == State.BRAKING or current_state == State.HURT or current_state == State.ROLLING or current_state == State.CLIMBING:
+	if current_state == State.BRAKING or current_state == State.HURT or current_state == State.ROLLING or current_state == State.CLIMBING or current_state == State.DODGING:
 		pass
 	elif dir > 0:
 		facing_direction = 1.0
@@ -847,6 +911,9 @@ func update_animation() -> void:
 			return
 		State.STOMPING, State.ROLLING:
 			set_anim("spin")
+			return
+		State.DODGING:
+			set_anim("dodge")
 			return
 		State.HURT:
 			set_anim("hurt")
