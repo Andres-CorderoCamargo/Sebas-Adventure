@@ -1,0 +1,21 @@
+name: Sincronizar con Repositorio B
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código de A
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enviar cambios a B
+        env:
+          TOKEN: ${{ secrets.DEST_REPO_TOKEN }}
+        run: |
+          git push --force https://${TOKEN}@://github.com HEAD:main
